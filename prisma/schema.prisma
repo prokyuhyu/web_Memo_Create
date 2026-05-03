@@ -1,0 +1,162 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── Enums ────────────────────────────────────────────────────────────────────
+
+enum EntityType {
+  FILE
+  SCHEDULE
+  NOTE
+}
+
+enum SyncAction {
+  CREATE
+  UPDATE
+  DELETE
+  CONFLICT
+}
+
+enum ResolvedBy {
+  CLIENT
+  SERVER
+  PENDING
+}
+
+enum TriggerType {
+  TIME_BASED
+  CONDITION_BASED
+  EVENT_BASED
+}
+
+// ─── Auth ─────────────────────────────────────────────────────────────────────
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  refreshTokens RefreshToken[]
+  files         File[]
+  schedules     Schedule[]
+  notes         Note[]
+  syncLogs      SyncLog[]
+  macros        Macro[]
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// ─── Files ────────────────────────────────────────────────────────────────────
+
+model File {
+  id           String    @id @default(cuid())
+  userId       String
+  originalName String
+  storedName   String
+  mimeType     String
+  size         Int
+  path         String
+  version      Int       @default(1)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// ─── Schedules ────────────────────────────────────────────────────────────────
+
+model Schedule {
+  id          String    @id @default(cuid())
+  userId      String
+  title       String
+  description String?
+  startAt     DateTime
+  endAt       DateTime?
+  notifyAt    DateTime?
+  version     Int       @default(1)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// ─── Notes ────────────────────────────────────────────────────────────────────
+
+model Note {
+  id        String    @id @default(cuid())
+  userId    String
+  title     String
+  body      String
+  tags      String[]
+  isPublic  Boolean   @default(false)
+  version   Int       @default(1)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// ─── Sync ─────────────────────────────────────────────────────────────────────
+
+model SyncLog {
+  id            String     @id @default(cuid())
+  userId        String
+  entityType    EntityType
+  entityId      String
+  action        SyncAction
+  clientVersion Int
+  serverVersion Int
+  resolvedBy    ResolvedBy @default(PENDING)
+  syncedAt      DateTime   @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([entityType, entityId])
+}
+
+// ─── Macros ───────────────────────────────────────────────────────────────────
+
+model Macro {
+  id            String      @id @default(cuid())
+  userId        String
+  name          String
+  triggerType   TriggerType
+  triggerConfig Json
+  actionType    String
+  actionConfig  Json
+  isActive      Boolean     @default(true)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
