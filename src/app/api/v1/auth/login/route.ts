@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { z } from 'zod'
 import { compare } from 'bcryptjs'
 import { prisma } from '@/lib/prisma'
