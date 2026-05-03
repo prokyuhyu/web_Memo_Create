@@ -10,7 +10,7 @@ const syncItemSchema = z.object({
   version: z.number().int().min(1),
   updatedAt: z.string().datetime(),
   deletedAt: z.string().datetime().optional(),
-  data: z.record(z.unknown()),
+  data: z.record(z.string(),z.unknown()),
 })
 
 const syncSchema = z.object({
