@@ -9,13 +9,13 @@ const resolveSchema = z.discriminatedUnion('resolution', [
     entityType: z.enum(['NOTE', 'SCHEDULE']),
     entityId: z.string().min(1),
     resolution: z.literal('CLIENT'),
-    clientData: z.record(z.unknown()),
+    clientData: z.record(z.string(), z.unknown()),
   }),
   z.object({
     entityType: z.enum(['NOTE', 'SCHEDULE']),
     entityId: z.string().min(1),
     resolution: z.literal('SERVER'),
-    clientData: z.record(z.unknown()).optional(),
+    clientData: z.record(z.string(), z.unknown()).optional(),
   }),
 ])
 
