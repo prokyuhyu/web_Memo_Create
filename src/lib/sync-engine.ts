@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma'
-import type { Note, Schedule } from '@/app/generated/prisma/client'
+import type { Note, Schedule } from '@prisma/client'
 
 export type SyncItem = {
   id: string
