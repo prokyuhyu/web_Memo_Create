@@ -3,9 +3,6 @@ import { jwtVerify } from 'jose'
 
 const enc = (s: string) => new TextEncoder().encode(s)
 
-// Dashboard pages served from the (dashboard) route group
-const DASHBOARD_PATHS = ['/files', '/calendar', '/notes']
-
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
@@ -31,21 +28,8 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // Protected dashboard UI routes — redirect to /login if no token cookie hint
-  if (DASHBOARD_PATHS.some((p) => pathname === p || pathname.startsWith(p + '/'))) {
-    const tokenCookie = request.cookies.get('token')
-    if (!tokenCookie?.value) {
-      return NextResponse.redirect(new URL('/login', request.url))
-    }
-
-    try {
-      await jwtVerify(tokenCookie.value, enc(process.env.JWT_SECRET!))
-      return NextResponse.next()
-    } catch {
-      return NextResponse.redirect(new URL('/login', request.url))
-    }
-  }
-
+  // Dashboard UI routes: tokens live in localStorage (client-side only).
+  // Auth guard is handled client-side; middleware just passes through.
   return NextResponse.next()
 }
 
