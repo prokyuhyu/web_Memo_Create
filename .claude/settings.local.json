@@ -7,7 +7,10 @@
       "Bash(grep -v \"^$\")",
       "Bash(git -C /c/Users/USER/Desktop/ai-pro add prisma/schema.prisma src/lib/prisma.ts package.json package-lock.json)",
       "Bash(git -C /c/Users/USER/Desktop/ai-pro status)",
-      "Bash(git -C /c/Users/USER/Desktop/ai-pro add prisma.config.ts)"
+      "Bash(git -C /c/Users/USER/Desktop/ai-pro add prisma.config.ts)",
+      "Bash(git add *)",
+      "Bash(git push *)",
+      "Bash(gh pr *)"
     ]
   }
 }
