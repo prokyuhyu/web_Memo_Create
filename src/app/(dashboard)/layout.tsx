@@ -124,12 +124,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <SyncContext.Provider value={{ addSyncItem }}>
-      <div className="flex h-screen overflow-hidden bg-gray-50">
+      <div className="flex h-screen overflow-hidden bg-[#1e3a5f]">
         {/* Sidebar */}
-        <aside className="w-56 shrink-0 flex flex-col bg-white border-r border-gray-200">
+        <aside className="w-56 shrink-0 flex flex-col bg-[#162d4a] border-r border-blue-800">
           {/* App name */}
-          <div className="px-5 py-4 border-b border-gray-100">
-            <span className="text-base font-bold text-gray-900 tracking-tight">AI Pro</span>
+          <div className="px-5 py-4 border-b border-blue-800">
+            <span className="text-base font-bold text-white tracking-tight">AI Pro</span>
           </div>
 
           {/* Sync button */}
@@ -178,8 +178,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   href={href}
                   className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                     active
-                      ? 'bg-blue-50 text-blue-700'
-                      : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                      ? 'bg-[#4a90d9]/20 text-[#4a90d9]'
+                      : 'text-gray-300 hover:bg-blue-900/40 hover:text-white'
                   }`}
                 >
                   <Icon size={16} />
@@ -193,7 +193,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <div className="px-3 pb-4">
             <div
               onClick={handleLogout}
-              className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-900 cursor-pointer transition-colors select-none"
+              className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-gray-300 hover:bg-blue-900/40 hover:text-white cursor-pointer transition-colors select-none"
             >
               <LogOut size={16} />
               Sign out

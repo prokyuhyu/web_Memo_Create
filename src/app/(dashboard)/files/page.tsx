@@ -68,10 +68,10 @@ function UploadZone({ onUploaded }: { onUploaded: () => void }) {
         onClick={() => !uploading && fileInputRef.current?.click()}
         className={`relative flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed py-12 cursor-pointer transition-colors select-none ${
           dragging
-            ? 'border-blue-400 bg-blue-50'
+            ? 'border-blue-400 bg-blue-900/30'
             : uploading
-            ? 'border-gray-200 bg-gray-50 cursor-default'
-            : 'border-gray-300 hover:border-blue-400 hover:bg-blue-50'
+            ? 'border-blue-800 bg-[#162d4a] cursor-default'
+            : 'border-blue-800 hover:border-blue-400 hover:bg-blue-900/20'
         }`}
       >
         <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
@@ -82,7 +82,7 @@ function UploadZone({ onUploaded }: { onUploaded: () => void }) {
           )}
         </div>
         <div className="text-center">
-          <p className="text-sm font-medium text-gray-700">
+          <p className="text-sm font-medium text-gray-200">
             {uploading ? 'Uploading…' : dragging ? 'Drop to upload' : 'Drag & drop a file here'}
           </p>
           {!uploading && (
@@ -103,7 +103,7 @@ function UploadZone({ onUploaded }: { onUploaded: () => void }) {
       </div>
 
       {error && (
-        <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+        <div className="rounded-lg bg-red-900/30 border border-red-700 px-4 py-3 text-sm text-red-300">
           {error}
         </div>
       )}
@@ -144,13 +144,13 @@ function FileRow({ file }: { file: FileRecord }) {
   }
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 px-5 py-4 space-y-2">
+    <div className="bg-[#162d4a] rounded-xl border border-blue-800 px-5 py-4 space-y-2">
       <div className="flex items-center gap-3">
-        <div className="w-9 h-9 rounded-lg bg-gray-100 flex items-center justify-center shrink-0">
-          <FileIcon size={16} className="text-gray-500" />
+        <div className="w-9 h-9 rounded-lg bg-blue-900/50 flex items-center justify-center shrink-0">
+          <FileIcon size={16} className="text-blue-300" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-gray-900 truncate">{file.originalName}</p>
+          <p className="text-sm font-medium text-white truncate">{file.originalName}</p>
           <p className="text-xs text-gray-400">
             {formatSize(file.size)} · {format(new Date(file.createdAt), 'yyyy-MM-dd HH:mm')}
           </p>
@@ -158,7 +158,7 @@ function FileRow({ file }: { file: FileRecord }) {
         <div className="flex items-center gap-1 shrink-0">
           <div
             onClick={handleDownload}
-            className="p-1.5 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 cursor-pointer transition-colors"
+            className="p-1.5 rounded-lg text-gray-400 hover:text-blue-400 hover:bg-blue-900/40 cursor-pointer transition-colors"
             style={{ opacity: downloading ? 0.5 : 1, pointerEvents: downloading ? 'none' : 'auto' }}
             title="Download"
           >
@@ -166,7 +166,7 @@ function FileRow({ file }: { file: FileRecord }) {
           </div>
           <div
             onClick={() => setConfirmDelete(true)}
-            className="p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 cursor-pointer transition-colors"
+            className="p-1.5 rounded-lg text-gray-400 hover:text-red-400 hover:bg-red-900/40 cursor-pointer transition-colors"
             title="Delete"
           >
             <Trash2 size={15} />
@@ -174,11 +174,11 @@ function FileRow({ file }: { file: FileRecord }) {
         </div>
       </div>
 
-      {error && <p className="text-xs text-red-600 pl-12">{error}</p>}
+      {error && <p className="text-xs text-red-400 pl-12">{error}</p>}
 
       {confirmDelete && (
-        <div className="rounded-lg bg-red-50 border border-red-200 p-3 flex items-center justify-between gap-3 ml-12">
-          <span className="text-xs text-red-700">Delete this file?</span>
+        <div className="rounded-lg bg-red-900/30 border border-red-700 p-3 flex items-center justify-between gap-3 ml-12">
+          <span className="text-xs text-red-300">Delete this file?</span>
           <div className="flex gap-2">
             <div
               onClick={() => !remove.isPending && remove.mutate()}
@@ -189,7 +189,7 @@ function FileRow({ file }: { file: FileRecord }) {
             </div>
             <div
               onClick={() => setConfirmDelete(false)}
-              className="text-xs font-medium text-gray-600 border border-gray-300 rounded-lg px-3 py-1 cursor-pointer hover:bg-gray-50 transition-colors select-none"
+              className="text-xs font-medium text-gray-300 border border-blue-600 rounded-lg px-3 py-1 cursor-pointer hover:bg-blue-900/40 transition-colors select-none"
             >
               Cancel
             </div>
@@ -215,8 +215,8 @@ export default function FilesPage() {
   return (
     <div className="max-w-2xl mx-auto px-6 py-8 space-y-6">
       <div className="flex items-center gap-2">
-        <Upload size={22} className="text-blue-600" />
-        <h1 className="text-2xl font-bold text-gray-900">Files</h1>
+        <Upload size={22} className="text-blue-400" />
+        <h1 className="text-2xl font-bold text-white">Files</h1>
         {data?.data?.total !== undefined && (
           <span className="ml-auto text-sm text-gray-400">{data.data.total} file{data.data.total !== 1 ? 's' : ''}</span>
         )}

@@ -72,22 +72,22 @@ function CreateNoteForm({ onDone }: { onDone: () => void }) {
   })
 
   return (
-    <div className="bg-white rounded-xl border border-blue-200 p-5 space-y-3 shadow-sm">
-      <h3 className="font-semibold text-gray-900 text-sm">New note</h3>
-      {error && <p className="text-xs text-red-600">{error}</p>}
+    <div className="bg-[#162d4a] rounded-xl border border-blue-800 p-5 space-y-3 shadow-sm">
+      <h3 className="font-semibold text-white text-sm">New note</h3>
+      {error && <p className="text-xs text-red-400">{error}</p>}
       <input
         autoFocus
         value={title}
         onChange={(e) => setTitle(e.target.value)}
         placeholder="Title"
-        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+        className="w-full rounded-lg bg-black text-white border border-blue-400 px-3 py-2 text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-400"
       />
       <textarea
         value={body}
         onChange={(e) => setBody(e.target.value)}
         placeholder="Write your note…"
         rows={4}
-        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 resize-none"
+        className="w-full rounded-lg bg-black text-white border border-blue-400 px-3 py-2 text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none"
       />
       <div className="flex gap-2 items-center">
         <Tag size={14} className="text-gray-400 shrink-0" />
@@ -95,10 +95,10 @@ function CreateNoteForm({ onDone }: { onDone: () => void }) {
           value={tagsRaw}
           onChange={(e) => setTagsRaw(e.target.value)}
           placeholder="Tags (comma-separated)"
-          className="flex-1 rounded-lg border border-gray-300 px-3 py-1.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+          className="flex-1 rounded-lg bg-black text-white border border-blue-400 px-3 py-1.5 text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-400"
         />
       </div>
-      <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer select-none">
+      <label className="flex items-center gap-2 text-sm text-gray-300 cursor-pointer select-none">
         <input
           type="checkbox"
           checked={isPublic}
@@ -110,7 +110,7 @@ function CreateNoteForm({ onDone }: { onDone: () => void }) {
       <div className="flex gap-2 pt-1">
         <div
           onClick={() => !create.isPending && create.mutate()}
-          className="flex items-center gap-1.5 rounded-lg bg-blue-600 text-white text-xs font-medium px-4 py-2 cursor-pointer hover:bg-blue-700 transition-colors select-none"
+          className="flex items-center gap-1.5 rounded-lg bg-blue-500 text-white text-xs font-medium px-4 py-2 cursor-pointer hover:bg-blue-600 transition-colors select-none"
           style={{ opacity: create.isPending ? 0.7 : 1, pointerEvents: create.isPending ? 'none' : 'auto' }}
         >
           <Check size={13} />
@@ -118,7 +118,7 @@ function CreateNoteForm({ onDone }: { onDone: () => void }) {
         </div>
         <div
           onClick={onDone}
-          className="flex items-center gap-1.5 rounded-lg border border-gray-300 text-gray-600 text-xs font-medium px-4 py-2 cursor-pointer hover:bg-gray-50 transition-colors select-none"
+          className="flex items-center gap-1.5 rounded-lg border border-blue-600 text-gray-300 text-xs font-medium px-4 py-2 cursor-pointer hover:bg-blue-900/40 transition-colors select-none"
         >
           <X size={13} />
           Cancel
@@ -168,19 +168,19 @@ function NoteCard({ note }: { note: Note }) {
 
   if (editing) {
     return (
-      <div className="bg-white rounded-xl border border-blue-200 p-5 space-y-3 shadow-sm">
-        {error && <p className="text-xs text-red-600">{error}</p>}
+      <div className="bg-[#162d4a] rounded-xl border border-blue-800 p-5 space-y-3 shadow-sm">
+        {error && <p className="text-xs text-red-400">{error}</p>}
         <input
           autoFocus
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-semibold outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+          className="w-full rounded-lg bg-black text-white border border-blue-400 px-3 py-2 text-sm font-semibold placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-400"
         />
         <textarea
           value={body}
           onChange={(e) => setBody(e.target.value)}
           rows={5}
-          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 resize-none"
+          className="w-full rounded-lg bg-black text-white border border-blue-400 px-3 py-2 text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none"
         />
         <div className="flex gap-2 items-center">
           <Tag size={14} className="text-gray-400 shrink-0" />
@@ -188,10 +188,10 @@ function NoteCard({ note }: { note: Note }) {
             value={tagsRaw}
             onChange={(e) => setTagsRaw(e.target.value)}
             placeholder="Tags (comma-separated)"
-            className="flex-1 rounded-lg border border-gray-300 px-3 py-1.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+            className="flex-1 rounded-lg bg-black text-white border border-blue-400 px-3 py-1.5 text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-400"
           />
         </div>
-        <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer select-none">
+        <label className="flex items-center gap-2 text-sm text-gray-300 cursor-pointer select-none">
           <input
             type="checkbox"
             checked={isPublic}
@@ -203,7 +203,7 @@ function NoteCard({ note }: { note: Note }) {
         <div className="flex gap-2">
           <div
             onClick={() => !update.isPending && update.mutate()}
-            className="flex items-center gap-1.5 rounded-lg bg-blue-600 text-white text-xs font-medium px-4 py-2 cursor-pointer hover:bg-blue-700 transition-colors select-none"
+            className="flex items-center gap-1.5 rounded-lg bg-blue-500 text-white text-xs font-medium px-4 py-2 cursor-pointer hover:bg-blue-600 transition-colors select-none"
             style={{ opacity: update.isPending ? 0.7 : 1, pointerEvents: update.isPending ? 'none' : 'auto' }}
           >
             <Check size={13} />
@@ -211,7 +211,7 @@ function NoteCard({ note }: { note: Note }) {
           </div>
           <div
             onClick={() => { setEditing(false); setError('') }}
-            className="flex items-center gap-1.5 rounded-lg border border-gray-300 text-gray-600 text-xs font-medium px-4 py-2 cursor-pointer hover:bg-gray-50 transition-colors select-none"
+            className="flex items-center gap-1.5 rounded-lg border border-blue-600 text-gray-300 text-xs font-medium px-4 py-2 cursor-pointer hover:bg-blue-900/40 transition-colors select-none"
           >
             <X size={13} />
             Cancel
@@ -222,12 +222,12 @@ function NoteCard({ note }: { note: Note }) {
   }
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-3 hover:border-gray-300 transition-colors">
-      {error && <p className="text-xs text-red-600">{error}</p>}
+    <div className="bg-[#162d4a] rounded-xl border border-blue-800 p-5 space-y-3 hover:border-blue-600 transition-colors">
+      {error && <p className="text-xs text-red-400">{error}</p>}
 
       <div className="flex items-start justify-between gap-2">
         <h3
-          className="font-semibold text-gray-900 cursor-pointer hover:text-blue-600 transition-colors flex-1 min-w-0"
+          className="font-semibold text-white cursor-pointer hover:text-blue-400 transition-colors flex-1 min-w-0"
           onClick={() => setEditing(true)}
         >
           {note.title}
@@ -235,27 +235,27 @@ function NoteCard({ note }: { note: Note }) {
         <div className="flex items-center gap-1 shrink-0">
           <div
             onClick={() => setEditing(true)}
-            className="p-1.5 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 cursor-pointer transition-colors"
+            className="p-1.5 rounded-lg text-gray-400 hover:text-blue-400 hover:bg-blue-900/40 cursor-pointer transition-colors"
           >
             <Pencil size={14} />
           </div>
           <div
             onClick={() => setConfirmDelete(true)}
-            className="p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 cursor-pointer transition-colors"
+            className="p-1.5 rounded-lg text-gray-400 hover:text-red-400 hover:bg-red-900/40 cursor-pointer transition-colors"
           >
             <Trash2 size={14} />
           </div>
         </div>
       </div>
 
-      <p className="text-sm text-gray-600 line-clamp-3 whitespace-pre-wrap">{note.body}</p>
+      <p className="text-sm text-gray-300 line-clamp-3 whitespace-pre-wrap">{note.body}</p>
 
       {note.tags.length > 0 && (
         <div className="flex flex-wrap gap-1.5">
           {note.tags.map((tag) => (
             <span
               key={tag}
-              className="inline-flex items-center gap-1 text-xs bg-gray-100 text-gray-600 rounded-full px-2.5 py-0.5"
+              className="inline-flex items-center gap-1 text-xs bg-blue-900/50 text-blue-300 rounded-full px-2.5 py-0.5"
             >
               <Tag size={10} />
               {tag}
@@ -265,19 +265,19 @@ function NoteCard({ note }: { note: Note }) {
       )}
 
       <div className="flex items-center justify-between">
-        <span className="text-xs text-gray-400">
+        <span className="text-xs text-gray-500">
           {formatDistanceToNow(new Date(note.updatedAt), { addSuffix: true })}
         </span>
         {note.isPublic && (
-          <span className="text-xs bg-green-100 text-green-700 rounded-full px-2 py-0.5">
+          <span className="text-xs bg-green-900/50 text-green-400 rounded-full px-2 py-0.5">
             Public
           </span>
         )}
       </div>
 
       {confirmDelete && (
-        <div className="rounded-lg bg-red-50 border border-red-200 p-3 flex items-center justify-between gap-3">
-          <span className="text-xs text-red-700">Delete this note?</span>
+        <div className="rounded-lg bg-red-900/30 border border-red-700 p-3 flex items-center justify-between gap-3">
+          <span className="text-xs text-red-300">Delete this note?</span>
           <div className="flex gap-2">
             <div
               onClick={() => !remove.isPending && remove.mutate()}
@@ -288,7 +288,7 @@ function NoteCard({ note }: { note: Note }) {
             </div>
             <div
               onClick={() => setConfirmDelete(false)}
-              className="text-xs font-medium text-gray-600 border border-gray-300 rounded-lg px-3 py-1 cursor-pointer hover:bg-gray-50 transition-colors select-none"
+              className="text-xs font-medium text-gray-300 border border-blue-600 rounded-lg px-3 py-1 cursor-pointer hover:bg-blue-900/40 transition-colors select-none"
             >
               Cancel
             </div>
@@ -315,11 +315,11 @@ export default function NotesPage() {
     <div className="max-w-2xl mx-auto px-6 py-8 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Notes</h1>
+        <h1 className="text-2xl font-bold text-white">Notes</h1>
         {!creating && (
           <div
             onClick={() => setCreating(true)}
-            className="flex items-center gap-2 rounded-lg bg-blue-600 text-white text-sm font-medium px-4 py-2 cursor-pointer hover:bg-blue-700 transition-colors select-none"
+            className="flex items-center gap-2 rounded-lg bg-blue-500 text-white text-sm font-medium px-4 py-2 cursor-pointer hover:bg-blue-600 transition-colors select-none"
           >
             <Plus size={16} />
             New note
