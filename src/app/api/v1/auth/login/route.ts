@@ -47,6 +47,13 @@ export async function POST(request: Request) {
     },
   })
 
+  try {
+    const { createProfileRoom } = await import('@/lib/create-profile-room')
+    await createProfileRoom(user.id)
+  } catch {
+    // silent — login must not fail
+  }
+
   return success({
     accessToken,
     refreshToken,
