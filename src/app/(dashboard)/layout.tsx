@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback, createContext, useContext } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
-import { Files, Calendar, NotebookPen, RefreshCw, LogOut } from 'lucide-react'
+import { Files, Calendar, NotebookPen, RefreshCw, LogOut, ChevronLeft, ChevronRight, Menu } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import api from '@/lib/api-client'
 import { ConflictModal } from '@/components/ConflictModal'
@@ -56,14 +56,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [conflictsDeferred, setConflictsDeferred] = useState(false)
   const [syncError, setSyncError] = useState('')
   const [pendingItems, setPendingItems] = useState<SyncItem[]>([])
+  const [sidebarOpen, setSidebarOpen] = useState(true)
 
-  // Auth guard
+  // Auth guard + screen size detection
   useEffect(() => {
     if (!localStorage.getItem('accessToken')) {
       router.replace('/login')
     }
     const stored = localStorage.getItem('lastSyncedAt')
     if (stored) setLastSynced(new Date(stored))
+    if (window.innerWidth < 768) setSidebarOpen(false)
   }, [router])
 
   const addSyncItem = useCallback((item: SyncItem) => {
@@ -125,15 +127,39 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   return (
     <SyncContext.Provider value={{ addSyncItem }}>
       <div className="flex h-screen overflow-hidden bg-[#0d1117]">
+        {/* Mobile overlay backdrop */}
+        {sidebarOpen && (
+          <div
+            className="fixed inset-0 bg-black/50 z-10 md:hidden"
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
+
         {/* Sidebar */}
-        <aside className="w-64 shrink-0 flex flex-col bg-[#161b22] border-r border-[#30363d] p-4">
+        <aside
+          className={`
+            shrink-0 flex flex-col bg-[#161b22] border-r border-[#30363d]
+            transition-all duration-300 ease-in-out overflow-hidden relative z-20
+            ${sidebarOpen ? 'w-64 p-4' : 'w-0 md:w-16 md:p-2'}
+            fixed md:static h-full
+          `}
+        >
+          {/* Toggle button */}
+          <button
+            onClick={() => setSidebarOpen((o) => !o)}
+            className="absolute top-3 right-2 bg-[#21262d] hover:bg-[#30363d] text-[#8b949e] rounded-lg p-1.5 z-30 hidden md:flex items-center justify-center"
+            aria-label={sidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
+          >
+            {sidebarOpen ? <ChevronLeft size={14} /> : <ChevronRight size={14} />}
+          </button>
+
           {/* App name */}
-          <div className="mb-6">
-            <span className="text-[#e6edf3] font-bold text-lg">AI Pro</span>
+          <div className={`mb-6 ${sidebarOpen ? '' : 'md:hidden'}`}>
+            <span className="text-[#e6edf3] font-bold text-lg whitespace-nowrap">AI Pro</span>
           </div>
 
           {/* Sync button */}
-          <div className="mb-3">
+          <div className={`mb-3 ${sidebarOpen ? '' : 'md:hidden'}`}>
             <div
               onClick={handleSync}
               className="flex items-center justify-center gap-2 w-full rounded-lg bg-[#7c3aed] hover:bg-[#6d28d9] text-white text-sm font-medium py-2 px-3 cursor-pointer transition-colors select-none"
@@ -168,22 +194,39 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             )}
           </div>
 
+          {/* Collapsed desktop: sync icon only */}
+          {!sidebarOpen && (
+            <div className="hidden md:flex flex-col items-center mb-3 mt-8">
+              <div
+                onClick={handleSync}
+                title="Sync"
+                className="flex items-center justify-center rounded-lg bg-[#7c3aed] hover:bg-[#6d28d9] text-white p-2 cursor-pointer transition-colors select-none"
+                style={{ opacity: syncing ? 0.7 : 1, pointerEvents: syncing ? 'none' : 'auto' }}
+              >
+                <RefreshCw size={16} className={syncing ? 'animate-spin' : ''} />
+              </div>
+            </div>
+          )}
+
           {/* Nav links */}
-          <nav className="flex-1 space-y-0.5">
+          <nav className={`flex-1 space-y-0.5 ${sidebarOpen ? '' : 'md:flex md:flex-col md:items-center md:space-y-1'}`}>
             {NAV.map(({ label, href, Icon }) => {
               const active = pathname === href || pathname.startsWith(href + '/')
               return (
                 <Link
                   key={href}
                   href={href}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  title={!sidebarOpen ? label : undefined}
+                  className={`flex items-center rounded-lg text-sm font-medium transition-colors ${
+                    sidebarOpen ? 'gap-2 px-3 py-2' : 'md:justify-center md:p-2'
+                  } ${
                     active
-                      ? 'bg-[#21262d] text-[#e6edf3] border-l-2 border-[#7c3aed]'
+                      ? `bg-[#21262d] text-[#e6edf3] ${sidebarOpen ? 'border-l-2 border-[#7c3aed]' : ''}`
                       : 'text-[#8b949e] hover:text-[#e6edf3] hover:bg-[#21262d]'
                   }`}
                 >
                   <Icon size={16} />
-                  {label}
+                  {sidebarOpen && <span>{label}</span>}
                 </Link>
               )
             })}
@@ -193,16 +236,29 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <div>
             <div
               onClick={handleLogout}
-              className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-[#8b949e] hover:text-[#e6edf3] hover:bg-[#21262d] cursor-pointer transition-colors select-none"
+              title={!sidebarOpen ? 'Sign out' : undefined}
+              className={`flex items-center rounded-lg text-sm font-medium text-[#8b949e] hover:text-[#e6edf3] hover:bg-[#21262d] cursor-pointer transition-colors select-none ${
+                sidebarOpen ? 'gap-2 px-3 py-2' : 'md:justify-center md:p-2'
+              }`}
             >
               <LogOut size={16} />
-              Sign out
+              {sidebarOpen && <span>Sign out</span>}
             </div>
           </div>
         </aside>
 
         {/* Main content */}
-        <main className="flex-1 bg-[#0d1117] p-6 overflow-auto">{children}</main>
+        <main className="flex-1 bg-[#0d1117] p-6 overflow-auto">
+          {/* Mobile hamburger */}
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="md:hidden mb-4 bg-[#21262d] hover:bg-[#30363d] text-[#8b949e] rounded-lg p-1.5"
+            aria-label="Open sidebar"
+          >
+            <Menu size={18} />
+          </button>
+          {children}
+        </main>
       </div>
 
       {/* Conflict modal — blocking overlay */}
