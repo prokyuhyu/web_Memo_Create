@@ -13,6 +13,8 @@ type Message = {
   senderId: string
   senderName: string
   createdAt: string
+  isPending?: boolean
+  isFailed?: boolean
 }
 
 type Room = {
@@ -60,7 +62,12 @@ export default function ChatPanel({ currentUserId, onUnreadChange }: Props) {
       const res = await api.get<{ success: boolean; data: { messages: Message[] } }>(
         `/chat/rooms/${roomId}/messages`,
       )
-      setMessages(res.data.data.messages)
+      const serverMessages = res.data.data.messages
+      const serverIds = new Set(serverMessages.map((m) => m.id))
+      setMessages((prev) => {
+        const stillPending = prev.filter((m) => (m.isPending || m.isFailed) && !serverIds.has(m.id))
+        return [...serverMessages, ...stillPending]
+      })
     } catch {
       // silent
     }
@@ -107,15 +114,40 @@ export default function ChatPanel({ currentUserId, onUnreadChange }: Props) {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
-  async function sendMessage() {
-    const content = inputText.trim()
+  async function sendMessage(retryContent?: string) {
+    const content = retryContent ?? inputText.trim()
     if (!content || !activeRoom) return
-    setInputText('')
+
+    const tempId = `temp-${Date.now()}`
+    const optimisticMessage: Message = {
+      id: tempId,
+      content,
+      senderId: currentUserId,
+      senderName: '',
+      createdAt: new Date().toISOString(),
+      isPending: true,
+    }
+
+    if (!retryContent) setInputText('')
+    setMessages((prev) =>
+      retryContent
+        ? prev.map((m) => m.content === content && m.isFailed ? { ...optimisticMessage } : m)
+        : [...prev, optimisticMessage]
+    )
+
     try {
-      await api.post(`/chat/rooms/${activeRoom.id}/messages`, { content })
+      const res = await api.post<{ success: boolean; data: { message: Message } }>(
+        `/chat/rooms/${activeRoom.id}/messages`,
+        { content },
+      )
+      setMessages((prev) =>
+        prev.map((m) => m.id === tempId ? { ...res.data.data.message, isPending: false } : m)
+      )
       fetchRooms()
     } catch {
-      // silent
+      setMessages((prev) =>
+        prev.map((m) => m.id === tempId ? { ...m, isFailed: true, isPending: false } : m)
+      )
     }
   }
 
@@ -222,18 +254,33 @@ export default function ChatPanel({ currentUserId, onUnreadChange }: Props) {
                   {!isMine && (
                     <span className="text-[#8b949e] text-xs mb-1 px-1">{msg.senderName}</span>
                   )}
-                  <div
-                    className={`px-3 py-2 max-w-[70%] text-sm break-words ${
-                      isMine
-                        ? 'bg-[#7c3aed] text-white rounded-2xl rounded-br-sm'
-                        : 'bg-[#21262d] text-[#e6edf3] rounded-2xl rounded-bl-sm'
-                    }`}
-                  >
-                    {msg.content}
+                  <div className={`flex items-end gap-1.5 ${isMine ? 'flex-row-reverse' : 'flex-row'}`}>
+                    <div
+                      className={`px-3 py-2 max-w-[70%] text-sm break-words ${
+                        isMine
+                          ? 'bg-[#7c3aed] text-white rounded-2xl rounded-br-sm'
+                          : 'bg-[#21262d] text-[#e6edf3] rounded-2xl rounded-bl-sm'
+                      } ${msg.isPending ? 'opacity-70' : ''} ${msg.isFailed ? 'border border-red-500' : ''}`}
+                    >
+                      {msg.content}
+                    </div>
+                    {msg.isPending && (
+                      <div className="w-3 h-3 rounded-full border border-white/30 border-t-white animate-spin shrink-0" />
+                    )}
                   </div>
-                  <span className="text-[#484f58] text-xs mt-0.5 px-1">
-                    {formatDistanceToNow(new Date(msg.createdAt), { addSuffix: true })}
-                  </span>
+                  {msg.isFailed && (
+                    <button
+                      onClick={() => sendMessage(msg.content)}
+                      className="text-red-400 text-xs mt-0.5 px-1 hover:text-red-300 transition-colors"
+                    >
+                      전송 실패 · 다시 시도
+                    </button>
+                  )}
+                  {!msg.isFailed && !msg.isPending && (
+                    <span className="text-[#484f58] text-xs mt-0.5 px-1">
+                      {formatDistanceToNow(new Date(msg.createdAt), { addSuffix: true })}
+                    </span>
+                  )}
                 </div>
               )
             })}
