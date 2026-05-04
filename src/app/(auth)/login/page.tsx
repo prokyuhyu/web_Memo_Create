@@ -44,55 +44,55 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#1e3a5f] px-4">
-      <div className="w-full max-w-sm bg-[#162d4a] rounded-2xl shadow-sm border border-blue-800 p-8 space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold text-white">Sign in</h1>
-          <p className="mt-1 text-sm text-gray-400">Welcome back to AI Pro</p>
+    <div className="min-h-screen flex items-center justify-center bg-[#0d1117] px-4">
+      <div className="w-full max-w-sm bg-[#161b22] border border-[#30363d] rounded-xl p-8 shadow-2xl space-y-6">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-[#7c3aed]">AI Pro</h1>
+          <p className="mt-1 text-sm text-[#8b949e]">Sign in to your account</p>
         </div>
 
         {error && (
-          <div className="rounded-lg bg-red-900/40 border border-red-600 px-4 py-3 text-sm text-red-300">
+          <div className="bg-[#da3633]/10 border border-[#da3633]/30 text-[#da3633] rounded-lg px-3 py-2 text-sm">
             {error}
           </div>
         )}
 
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-white mb-1">Email</label>
+            <label className="block text-[#8b949e] text-sm font-medium mb-1">Email</label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="you@example.com"
-              className="w-full rounded-lg bg-black text-white border border-blue-400 px-3 py-2 text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-400"
+              className="w-full bg-[#0d1117] text-[#e6edf3] border border-[#30363d] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#7c3aed] focus:ring-1 focus:ring-[#7c3aed] placeholder-[#484f58]"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-white mb-1">Password</label>
+            <label className="block text-[#8b949e] text-sm font-medium mb-1">Password</label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="••••••••"
-              className="w-full rounded-lg bg-black text-white border border-blue-400 px-3 py-2 text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-400"
+              className="w-full bg-[#0d1117] text-[#e6edf3] border border-[#30363d] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#7c3aed] focus:ring-1 focus:ring-[#7c3aed] placeholder-[#484f58]"
             />
           </div>
         </div>
 
         <div
           onClick={handleLogin}
-          className="w-full rounded-lg bg-blue-500 text-white text-sm font-medium py-2.5 text-center cursor-pointer hover:bg-blue-600 active:bg-blue-700 transition-colors select-none"
+          className="w-full bg-[#7c3aed] hover:bg-[#6d28d9] text-white font-medium py-2 rounded-lg transition-colors text-sm text-center cursor-pointer select-none"
           style={{ opacity: loading ? 0.7 : 1, pointerEvents: loading ? 'none' : 'auto' }}
         >
           {loading ? 'Signing in…' : 'Sign in'}
         </div>
 
-        <p className="text-center text-sm text-gray-400">
+        <p className="text-center text-sm text-[#8b949e]">
           No account?{' '}
-          <Link href="/register" className="text-blue-400 hover:underline font-medium">
+          <Link href="/register" className="text-[#7c3aed] hover:text-[#6d28d9] font-medium">
             Create one
           </Link>
         </p>

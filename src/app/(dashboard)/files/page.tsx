@@ -66,27 +66,27 @@ function UploadZone({ onUploaded }: { onUploaded: () => void }) {
         onDragLeave={() => setDragging(false)}
         onDrop={handleDrop}
         onClick={() => !uploading && fileInputRef.current?.click()}
-        className={`relative flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed py-12 cursor-pointer transition-colors select-none ${
+        className={`relative flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed py-12 cursor-pointer transition-colors select-none text-center ${
           dragging
-            ? 'border-blue-400 bg-blue-900/30'
+            ? 'border-[#7c3aed] bg-[#7c3aed]/10'
             : uploading
-            ? 'border-blue-800 bg-[#162d4a] cursor-default'
-            : 'border-blue-800 hover:border-blue-400 hover:bg-blue-900/20'
+            ? 'border-[#30363d] bg-[#161b22] cursor-default'
+            : 'border-[#30363d] hover:border-[#7c3aed] bg-[#161b22]'
         }`}
       >
-        <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
+        <div className="w-12 h-12 rounded-full bg-[#21262d] flex items-center justify-center">
           {uploading ? (
-            <Upload size={20} className="text-blue-500 animate-bounce" />
+            <Upload size={20} className="text-[#7c3aed] animate-bounce" />
           ) : (
-            <FolderOpen size={20} className="text-blue-500" />
+            <FolderOpen size={20} className="text-[#7c3aed]" />
           )}
         </div>
-        <div className="text-center">
-          <p className="text-sm font-medium text-gray-200">
+        <div>
+          <p className="text-sm font-medium text-[#8b949e]">
             {uploading ? 'Uploading…' : dragging ? 'Drop to upload' : 'Drag & drop a file here'}
           </p>
           {!uploading && (
-            <p className="text-xs text-gray-400 mt-0.5">or click to browse — max 50 MB</p>
+            <p className="text-xs text-[#484f58] mt-0.5">or click to browse — max 50 MB</p>
           )}
         </div>
 
@@ -103,7 +103,7 @@ function UploadZone({ onUploaded }: { onUploaded: () => void }) {
       </div>
 
       {error && (
-        <div className="rounded-lg bg-red-900/30 border border-red-700 px-4 py-3 text-sm text-red-300">
+        <div className="rounded-lg bg-[#da3633]/10 border border-[#da3633]/30 px-4 py-3 text-sm text-[#da3633]">
           {error}
         </div>
       )}
@@ -144,21 +144,21 @@ function FileRow({ file }: { file: FileRecord }) {
   }
 
   return (
-    <div className="bg-[#162d4a] rounded-xl border border-blue-800 px-5 py-4 space-y-2">
+    <div className="bg-[#161b22] border border-[#30363d] rounded-xl px-5 py-4 space-y-2 hover:border-[#7c3aed]/50 transition-colors">
       <div className="flex items-center gap-3">
-        <div className="w-9 h-9 rounded-lg bg-blue-900/50 flex items-center justify-center shrink-0">
-          <FileIcon size={16} className="text-blue-300" />
+        <div className="w-9 h-9 rounded-lg bg-[#21262d] flex items-center justify-center shrink-0">
+          <FileIcon size={16} className="text-[#7c3aed]" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-white truncate">{file.originalName}</p>
-          <p className="text-xs text-gray-400">
+          <p className="text-sm font-medium text-[#e6edf3] truncate">{file.originalName}</p>
+          <p className="text-xs text-[#8b949e]">
             {formatSize(file.size)} · {format(new Date(file.createdAt), 'yyyy-MM-dd HH:mm')}
           </p>
         </div>
         <div className="flex items-center gap-1 shrink-0">
           <div
             onClick={handleDownload}
-            className="p-1.5 rounded-lg text-gray-400 hover:text-blue-400 hover:bg-blue-900/40 cursor-pointer transition-colors"
+            className="p-1.5 rounded text-[#7c3aed] hover:bg-[#7c3aed]/10 cursor-pointer transition-colors text-sm px-3 py-1"
             style={{ opacity: downloading ? 0.5 : 1, pointerEvents: downloading ? 'none' : 'auto' }}
             title="Download"
           >
@@ -166,7 +166,7 @@ function FileRow({ file }: { file: FileRecord }) {
           </div>
           <div
             onClick={() => setConfirmDelete(true)}
-            className="p-1.5 rounded-lg text-gray-400 hover:text-red-400 hover:bg-red-900/40 cursor-pointer transition-colors"
+            className="p-1.5 rounded-lg text-[#8b949e] hover:text-[#da3633] hover:bg-[#da3633]/10 cursor-pointer transition-colors"
             title="Delete"
           >
             <Trash2 size={15} />
@@ -174,22 +174,22 @@ function FileRow({ file }: { file: FileRecord }) {
         </div>
       </div>
 
-      {error && <p className="text-xs text-red-400 pl-12">{error}</p>}
+      {error && <p className="text-xs text-[#da3633] pl-12">{error}</p>}
 
       {confirmDelete && (
-        <div className="rounded-lg bg-red-900/30 border border-red-700 p-3 flex items-center justify-between gap-3 ml-12">
-          <span className="text-xs text-red-300">Delete this file?</span>
+        <div className="rounded-lg bg-[#da3633]/10 border border-[#da3633]/30 p-3 flex items-center justify-between gap-3 ml-12">
+          <span className="text-xs text-[#da3633]">Delete this file?</span>
           <div className="flex gap-2">
             <div
               onClick={() => !remove.isPending && remove.mutate()}
-              className="text-xs font-medium text-white bg-red-600 rounded-lg px-3 py-1 cursor-pointer hover:bg-red-700 transition-colors select-none"
+              className="text-xs font-medium text-white bg-[#da3633] hover:bg-[#b91c1c] rounded-lg px-3 py-1 cursor-pointer transition-colors select-none"
               style={{ opacity: remove.isPending ? 0.7 : 1, pointerEvents: remove.isPending ? 'none' : 'auto' }}
             >
               {remove.isPending ? 'Deleting…' : 'Delete'}
             </div>
             <div
               onClick={() => setConfirmDelete(false)}
-              className="text-xs font-medium text-gray-300 border border-blue-600 rounded-lg px-3 py-1 cursor-pointer hover:bg-blue-900/40 transition-colors select-none"
+              className="text-xs font-medium text-[#8b949e] border border-[#30363d] rounded-lg px-3 py-1 cursor-pointer hover:bg-[#21262d] transition-colors select-none"
             >
               Cancel
             </div>
@@ -213,29 +213,29 @@ export default function FilesPage() {
   const files = data?.data?.files ?? []
 
   return (
-    <div className="max-w-2xl mx-auto px-6 py-8 space-y-6">
+    <div className="max-w-2xl mx-auto space-y-6">
       <div className="flex items-center gap-2">
-        <Upload size={22} className="text-blue-400" />
-        <h1 className="text-2xl font-bold text-white">Files</h1>
+        <Upload size={22} className="text-[#7c3aed]" />
+        <h1 className="text-2xl font-bold text-[#e6edf3]">Files</h1>
         {data?.data?.total !== undefined && (
-          <span className="ml-auto text-sm text-gray-400">{data.data.total} file{data.data.total !== 1 ? 's' : ''}</span>
+          <span className="ml-auto text-sm text-[#8b949e]">{data.data.total} file{data.data.total !== 1 ? 's' : ''}</span>
         )}
       </div>
 
       <UploadZone onUploaded={() => qc.invalidateQueries({ queryKey: ['files'] })} />
 
       {isLoading && (
-        <div className="text-center py-10 text-sm text-gray-400">Loading files…</div>
+        <div className="text-center py-10 text-sm text-[#8b949e]">Loading files…</div>
       )}
       {isError && (
-        <div className="rounded-xl bg-red-50 border border-red-200 px-5 py-4 text-sm text-red-700">
+        <div className="rounded-xl bg-[#da3633]/10 border border-[#da3633]/30 px-5 py-4 text-sm text-[#da3633]">
           Failed to load files.
         </div>
       )}
 
       {!isLoading && !isError && files.length === 0 && (
         <div className="text-center py-10">
-          <p className="text-gray-400 text-sm">No files uploaded yet.</p>
+          <p className="text-[#8b949e] text-sm">No files uploaded yet.</p>
         </div>
       )}
 

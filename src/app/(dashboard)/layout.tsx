@@ -124,19 +124,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <SyncContext.Provider value={{ addSyncItem }}>
-      <div className="flex h-screen overflow-hidden bg-[#1e3a5f]">
+      <div className="flex h-screen overflow-hidden bg-[#0d1117]">
         {/* Sidebar */}
-        <aside className="w-56 shrink-0 flex flex-col bg-[#162d4a] border-r border-blue-800">
+        <aside className="w-64 shrink-0 flex flex-col bg-[#161b22] border-r border-[#30363d] p-4">
           {/* App name */}
-          <div className="px-5 py-4 border-b border-blue-800">
-            <span className="text-base font-bold text-white tracking-tight">AI Pro</span>
+          <div className="mb-6">
+            <span className="text-[#e6edf3] font-bold text-lg">AI Pro</span>
           </div>
 
           {/* Sync button */}
-          <div className="px-3 pt-3 pb-2">
+          <div className="mb-3">
             <div
               onClick={handleSync}
-              className="flex items-center justify-center gap-2 w-full rounded-lg bg-blue-600 text-white text-sm font-medium py-2 cursor-pointer hover:bg-blue-700 active:bg-blue-800 transition-colors select-none"
+              className="flex items-center justify-center gap-2 w-full rounded-lg bg-[#7c3aed] hover:bg-[#6d28d9] text-white text-sm font-medium py-2 px-3 cursor-pointer transition-colors select-none"
               style={{ opacity: syncing ? 0.7 : 1, pointerEvents: syncing ? 'none' : 'auto' }}
             >
               <RefreshCw size={14} className={syncing ? 'animate-spin' : ''} />
@@ -146,40 +146,40 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             {/* Sync status */}
             <div className="mt-1.5 px-1 text-xs text-center">
               {syncError ? (
-                <span className="text-red-500">{syncError}</span>
+                <span className="text-[#da3633]">{syncError}</span>
               ) : conflicts.length > 0 && !conflictsDeferred ? (
-                <span className="text-amber-600">{conflicts.length} conflict(s) — resolve below</span>
+                <span className="text-amber-500">{conflicts.length} conflict(s) — resolve below</span>
               ) : conflicts.length > 0 && conflictsDeferred ? (
                 <span className="text-amber-500">Sync paused — conflicts deferred</span>
               ) : lastSynced ? (
-                <span className="text-gray-400">
+                <span className="text-[#8b949e]">
                   Synced {formatDistanceToNow(lastSynced, { addSuffix: true })}
                 </span>
               ) : (
-                <span className="text-gray-400">Not synced yet</span>
+                <span className="text-[#8b949e]">Not synced yet</span>
               )}
             </div>
 
             {/* Pending badge */}
             {pendingItems.length > 0 && (
-              <div className="mt-1 text-xs text-center text-blue-500">
+              <div className="mt-1 text-xs text-center text-[#7c3aed]">
                 {pendingItems.length} pending change{pendingItems.length !== 1 ? 's' : ''}
               </div>
             )}
           </div>
 
           {/* Nav links */}
-          <nav className="flex-1 px-3 py-2 space-y-0.5">
+          <nav className="flex-1 space-y-0.5">
             {NAV.map(({ label, href, Icon }) => {
               const active = pathname === href || pathname.startsWith(href + '/')
               return (
                 <Link
                   key={href}
                   href={href}
-                  className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                     active
-                      ? 'bg-[#4a90d9]/20 text-[#4a90d9]'
-                      : 'text-gray-300 hover:bg-blue-900/40 hover:text-white'
+                      ? 'bg-[#21262d] text-[#e6edf3] border-l-2 border-[#7c3aed]'
+                      : 'text-[#8b949e] hover:text-[#e6edf3] hover:bg-[#21262d]'
                   }`}
                 >
                   <Icon size={16} />
@@ -190,10 +190,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </nav>
 
           {/* Logout */}
-          <div className="px-3 pb-4">
+          <div>
             <div
               onClick={handleLogout}
-              className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-gray-300 hover:bg-blue-900/40 hover:text-white cursor-pointer transition-colors select-none"
+              className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-[#8b949e] hover:text-[#e6edf3] hover:bg-[#21262d] cursor-pointer transition-colors select-none"
             >
               <LogOut size={16} />
               Sign out
@@ -202,7 +202,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </aside>
 
         {/* Main content */}
-        <main className="flex-1 overflow-y-auto">{children}</main>
+        <main className="flex-1 bg-[#0d1117] p-6 overflow-auto">{children}</main>
       </div>
 
       {/* Conflict modal — blocking overlay */}
