@@ -6,9 +6,9 @@ import { success } from '@/lib/api-response'
 
 export async function GET(
   _request: NextRequest,
-  { params }: { params: { noteId: string } },
+  { params }: { params: Promise<{ noteId: string }> },
 ) {
-  const { noteId } = params
+  const { noteId } = await params
 
   const comments = await prisma.comment.findMany({
     where: { noteId },
@@ -33,10 +33,10 @@ const commentSchema = z.object({
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { noteId: string } },
+  { params }: { params: Promise<{ noteId: string }> },
 ) {
   const { userId } = await requireAuth(request)
-  const { noteId } = params
+  const { noteId } = await params
 
   const body = await request.json()
   const parsed = commentSchema.safeParse(body)

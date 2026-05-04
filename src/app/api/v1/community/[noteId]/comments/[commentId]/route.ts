@@ -5,10 +5,10 @@ import { success } from '@/lib/api-response'
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { noteId: string; commentId: string } },
+  { params }: { params: Promise<{ noteId: string; commentId: string }> },
 ) {
   const { userId } = await requireAuth(request)
-  const { commentId } = params
+  const { commentId } = await params
 
   const comment = await prisma.comment.findUnique({ where: { id: commentId } })
   if (!comment) {
