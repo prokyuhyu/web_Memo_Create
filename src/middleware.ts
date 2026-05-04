@@ -11,8 +11,8 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  // Public note pages — no auth required
-  if (pathname.startsWith('/notes/')) {
+  // Public community feed — no auth required
+  if (pathname.startsWith('/api/v1/community')) {
     return NextResponse.next()
   }
 

@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Plus, Pencil, Trash2, X, Check, Tag, Link } from 'lucide-react'
+import { Plus, Pencil, Trash2, X, Check, Tag } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import api from '@/lib/api-client'
 import { useSyncQueue } from '@/app/(dashboard)/layout'
@@ -146,12 +146,6 @@ function NoteCard({ note }: { note: Note }) {
   const [error, setError] = useState('')
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null)
 
-  const handleCopyLink = useCallback(() => {
-    const shareUrl = `${window.location.origin}/notes/${note.id}`
-    navigator.clipboard.writeText(shareUrl)
-    setToast({ message: '링크가 복사됐습니다', type: 'success' })
-  }, [note.id])
-
   const update = useMutation({
     mutationFn: () =>
       api
@@ -285,15 +279,6 @@ function NoteCard({ note }: { note: Note }) {
             <span className="text-xs bg-[#238636]/20 text-[#238636] rounded-full px-2 py-0.5">
               Public
             </span>
-          )}
-          {note.isPublic && (
-            <button
-              onClick={handleCopyLink}
-              className="text-[#8b949e] hover:text-[#7c3aed] text-xs flex items-center gap-1 transition-colors"
-            >
-              <Link size={12} />
-              링크 복사
-            </button>
           )}
         </div>
       </div>

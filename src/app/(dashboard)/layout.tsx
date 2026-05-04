@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback, createContext, useContext } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
-import { Files, Calendar, NotebookPen, RefreshCw, LogOut, ChevronLeft, ChevronRight, Menu } from 'lucide-react'
+import { Files, Calendar, NotebookPen, RefreshCw, LogOut, ChevronLeft, ChevronRight, Menu, Users } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import api from '@/lib/api-client'
 import { ConflictModal } from '@/components/ConflictModal'
@@ -42,9 +42,10 @@ type ConflictItem = {
 // ─── Layout ───────────────────────────────────────────────────────────────
 
 const NAV = [
-  { label: 'Notes', href: '/notes', Icon: NotebookPen },
-  { label: 'Calendar', href: '/calendar', Icon: Calendar },
+  { label: '커뮤니티', href: '/community', Icon: Users },
   { label: 'Files', href: '/files', Icon: Files },
+  { label: 'Calendar', href: '/calendar', Icon: Calendar },
+  { label: 'Notes', href: '/notes', Icon: NotebookPen },
 ]
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
