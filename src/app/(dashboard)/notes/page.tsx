@@ -1,11 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Plus, Pencil, Trash2, X, Check, Tag } from 'lucide-react'
+import { Plus, Pencil, Trash2, X, Check, Tag, Link } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import api from '@/lib/api-client'
 import { useSyncQueue } from '@/app/(dashboard)/layout'
+import Toast from '@/components/Toast'
 
 type Note = {
   id: string
@@ -143,6 +144,13 @@ function NoteCard({ note }: { note: Note }) {
   const [isPublic, setIsPublic] = useState(note.isPublic)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [error, setError] = useState('')
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null)
+
+  const handleCopyLink = useCallback(() => {
+    const shareUrl = `${window.location.origin}/notes/${note.id}`
+    navigator.clipboard.writeText(shareUrl)
+    setToast({ message: '링크가 복사됐습니다', type: 'success' })
+  }, [note.id])
 
   const update = useMutation({
     mutationFn: () =>
@@ -226,6 +234,7 @@ function NoteCard({ note }: { note: Note }) {
 
   return (
     <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-4 hover:border-[#7c3aed]/50 transition-colors space-y-3">
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
       {error && <p className="text-xs text-[#da3633]">{error}</p>}
 
       <div className="flex items-start justify-between gap-2">
@@ -271,11 +280,22 @@ function NoteCard({ note }: { note: Note }) {
         <span className="text-xs text-[#484f58]">
           {formatDistanceToNow(new Date(note.updatedAt), { addSuffix: true })}
         </span>
-        {note.isPublic && (
-          <span className="text-xs bg-[#238636]/20 text-[#238636] rounded-full px-2 py-0.5">
-            Public
-          </span>
-        )}
+        <div className="flex items-center gap-2">
+          {note.isPublic && (
+            <span className="text-xs bg-[#238636]/20 text-[#238636] rounded-full px-2 py-0.5">
+              Public
+            </span>
+          )}
+          {note.isPublic && (
+            <button
+              onClick={handleCopyLink}
+              className="text-[#8b949e] hover:text-[#7c3aed] text-xs flex items-center gap-1 transition-colors"
+            >
+              <Link size={12} />
+              링크 복사
+            </button>
+          )}
+        </div>
       </div>
 
       {confirmDelete && (

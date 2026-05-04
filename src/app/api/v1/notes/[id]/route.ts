@@ -21,6 +21,7 @@ export async function GET(
 
   const note = await prisma.note.findFirst({
     where: { id, deletedAt: null },
+    include: { user: { select: { name: true } } },
   })
 
   if (!note) return error('Note not found', 404)
