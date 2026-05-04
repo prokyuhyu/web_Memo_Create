@@ -7,6 +7,7 @@ import { Files, Calendar, NotebookPen, RefreshCw, LogOut, ChevronLeft, ChevronRi
 import { formatDistanceToNow } from 'date-fns'
 import api from '@/lib/api-client'
 import { ConflictModal } from '@/components/ConflictModal'
+import ChatBubble from '@/components/Chat/ChatBubble'
 
 // ─── Sync queue context ────────────────────────────────────────────────────
 
@@ -269,6 +270,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           onDefer={() => setConflictsDeferred(true)}
         />
       )}
+
+      <ChatBubble />
     </SyncContext.Provider>
   )
 }

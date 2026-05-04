@@ -50,6 +50,8 @@ model User {
   notes         Note[]
   syncLogs      SyncLog[]
   macros        Macro[]
+  chatRooms     ChatRoomParticipant[]
+  sentMessages  ChatMessage[]
 }
 
 model RefreshToken {
@@ -140,6 +142,42 @@ model SyncLog {
 
   @@index([userId])
   @@index([entityType, entityId])
+}
+
+// ─── Chat ─────────────────────────────────────────────────────────────────────
+
+model ChatRoom {
+  id           String    @id @default(cuid())
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  participants ChatRoomParticipant[]
+  messages     ChatMessage[]
+
+  @@index([updatedAt])
+}
+
+model ChatRoomParticipant {
+  id       String   @id @default(cuid())
+  roomId   String
+  userId   String
+  joinedAt DateTime @default(now())
+  room     ChatRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([roomId, userId])
+  @@index([userId])
+}
+
+model ChatMessage {
+  id        String   @id @default(cuid())
+  roomId    String
+  senderId  String
+  content   String
+  createdAt DateTime @default(now())
+  room      ChatRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  sender    User     @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@index([roomId, createdAt])
 }
 
 // ─── Macros ───────────────────────────────────────────────────────────────────
