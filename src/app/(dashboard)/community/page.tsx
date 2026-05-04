@@ -14,6 +14,14 @@ type Post = {
   updatedAt: string
 }
 
+type Comment = {
+  id: string
+  content: string
+  authorName: string
+  userId: string
+  createdAt: string
+}
+
 type CommunityResponse = {
   success: boolean
   data: { posts: Post[]; total: number; page: number; limit: number }
@@ -27,6 +35,18 @@ async function fetchPosts(page: number, search: string): Promise<CommunityRespon
   return res.json()
 }
 
+function getCurrentUserId(): string | null {
+  try {
+    const token = localStorage.getItem('accessToken')
+    if (!token) return null
+    const payload = token.split('.')[1]
+    const decoded = JSON.parse(atob(payload))
+    return decoded.userId ?? decoded.sub ?? null
+  } catch {
+    return null
+  }
+}
+
 export default function CommunityPage() {
   const [posts, setPosts] = useState<Post[]>([])
   const [total, setTotal] = useState(0)
@@ -36,6 +56,16 @@ export default function CommunityPage() {
   const [loading, setLoading] = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
   const [error, setError] = useState('')
+
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null)
+  const [openCommentIds, setOpenCommentIds] = useState<Set<string>>(new Set())
+  const [comments, setComments] = useState<Record<string, Comment[]>>({})
+  const [commentInput, setCommentInput] = useState<Record<string, string>>({})
+  const [isLoadingComments, setIsLoadingComments] = useState<Record<string, boolean>>({})
+
+  useEffect(() => {
+    setCurrentUserId(getCurrentUserId())
+  }, [])
 
   // 500ms debounce
   useEffect(() => {
@@ -70,6 +100,77 @@ export default function CommunityPage() {
       .finally(() => setLoadingMore(false))
   }, [page, debouncedSearch])
 
+  const fetchComments = useCallback(async (noteId: string) => {
+    setIsLoadingComments((prev) => ({ ...prev, [noteId]: true }))
+    try {
+      const res = await fetch(`/api/v1/community/${noteId}/comments`)
+      const data = await res.json()
+      if (data.success) {
+        setComments((prev) => ({ ...prev, [noteId]: data.data.comments }))
+      }
+    } finally {
+      setIsLoadingComments((prev) => ({ ...prev, [noteId]: false }))
+    }
+  }, [])
+
+  const toggleComments = useCallback(
+    (noteId: string) => {
+      setOpenCommentIds((prev) => {
+        const next = new Set(prev)
+        if (next.has(noteId)) {
+          next.delete(noteId)
+        } else {
+          next.add(noteId)
+          if (!comments[noteId]) {
+            fetchComments(noteId)
+          }
+        }
+        return next
+      })
+    },
+    [comments, fetchComments],
+  )
+
+  const submitComment = useCallback(
+    async (noteId: string) => {
+      const content = (commentInput[noteId] ?? '').trim()
+      if (!content) return
+      const token = localStorage.getItem('accessToken')
+      const res = await fetch(`/api/v1/community/${noteId}/comments`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ content }),
+      })
+      const data = await res.json()
+      if (data.success) {
+        setComments((prev) => ({
+          ...prev,
+          [noteId]: [...(prev[noteId] ?? []), data.data.comment],
+        }))
+        setCommentInput((prev) => ({ ...prev, [noteId]: '' }))
+      }
+    },
+    [commentInput],
+  )
+
+  const deleteComment = useCallback(async (noteId: string, commentId: string) => {
+    const token = localStorage.getItem('accessToken')
+    const res = await fetch(`/api/v1/community/${noteId}/comments/${commentId}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    const data = await res.json()
+    if (data.success) {
+      setComments((prev) => ({
+        ...prev,
+        [noteId]: (prev[noteId] ?? []).filter((c) => c.id !== commentId),
+      }))
+    }
+  }, [])
+
   const hasMore = posts.length < total
 
   return (
@@ -100,42 +201,118 @@ export default function CommunityPage() {
       )}
 
       <div className="space-y-4">
-        {posts.map((post) => (
-          <div
-            key={post.id}
-            className="bg-[#161b22] border border-[#30363d] rounded-xl p-5 hover:border-[#7c3aed]/50 transition-colors"
-          >
-            <div className="flex items-center gap-2 mb-2">
-              <span className="bg-[#7c3aed]/20 text-[#7c3aed] text-xs px-2 py-0.5 rounded-full">
-                by {post.authorName}
-              </span>
-            </div>
+        {posts.map((post) => {
+          const isOpen = openCommentIds.has(post.id)
+          const postComments = comments[post.id] ?? []
+          const commentCount = postComments.length
 
-            <h2 className="text-[#e6edf3] font-semibold text-lg mb-2">{post.title}</h2>
-
-            <p className="text-[#8b949e] text-sm leading-relaxed mb-3">
-              {post.body.length >= 200 ? post.body + '…' : post.body}
-            </p>
-
-            {post.tags.length > 0 && (
-              <div className="flex flex-wrap gap-1.5 mb-3">
-                {post.tags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="inline-flex items-center gap-1 bg-[#21262d] text-[#8b949e] text-xs px-2 py-0.5 rounded-full"
-                  >
-                    <Tag size={10} />
-                    {tag}
-                  </span>
-                ))}
+          return (
+            <div
+              key={post.id}
+              className="bg-[#161b22] border border-[#30363d] rounded-xl p-5 hover:border-[#7c3aed]/50 transition-colors"
+            >
+              <div className="flex items-center gap-2 mb-2">
+                <span className="bg-[#7c3aed]/20 text-[#7c3aed] text-xs px-2 py-0.5 rounded-full">
+                  by {post.authorName}
+                </span>
               </div>
-            )}
 
-            <span className="text-[#484f58] text-xs">
-              {formatDistanceToNow(new Date(post.updatedAt), { addSuffix: true })}
-            </span>
-          </div>
-        ))}
+              <h2 className="text-[#e6edf3] font-semibold text-lg mb-2">{post.title}</h2>
+
+              <p className="text-[#8b949e] text-sm leading-relaxed mb-3">
+                {post.body.length >= 200 ? post.body + '…' : post.body}
+              </p>
+
+              {post.tags.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 mb-3">
+                  {post.tags.map((tag) => (
+                    <span
+                      key={tag}
+                      className="inline-flex items-center gap-1 bg-[#21262d] text-[#8b949e] text-xs px-2 py-0.5 rounded-full"
+                    >
+                      <Tag size={10} />
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              )}
+
+              <div className="flex items-center justify-between">
+                <span className="text-[#484f58] text-xs">
+                  {formatDistanceToNow(new Date(post.updatedAt), { addSuffix: true })}
+                </span>
+                <button
+                  onClick={() => toggleComments(post.id)}
+                  className="text-[#8b949e] hover:text-[#7c3aed] text-sm flex items-center gap-1 transition-colors"
+                >
+                  💬 댓글 {isOpen ? commentCount : ''}개
+                </button>
+              </div>
+
+              {isOpen && (
+                <div className="border-t border-[#30363d] mt-4 pt-4">
+                  {isLoadingComments[post.id] ? (
+                    <p className="text-[#484f58] text-sm text-center py-2">불러오는 중…</p>
+                  ) : (
+                    <>
+                      {postComments.map((comment) => (
+                        <div
+                          key={comment.id}
+                          className="bg-[#21262d] rounded-lg px-3 py-2 mb-2 flex flex-col"
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="text-[#7c3aed] text-xs font-medium">
+                              by {comment.authorName}
+                            </span>
+                            {comment.userId === currentUserId && (
+                              <button
+                                onClick={() => deleteComment(post.id, comment.id)}
+                                className="text-[#da3633] text-xs hover:underline ml-auto"
+                              >
+                                삭제
+                              </button>
+                            )}
+                          </div>
+                          <p className="text-[#e6edf3] text-sm mt-1">{comment.content}</p>
+                          <span className="text-[#484f58] text-xs mt-1">
+                            {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}
+                          </span>
+                        </div>
+                      ))}
+
+                      {currentUserId ? (
+                        <div className="flex gap-2 mt-3">
+                          <input
+                            type="text"
+                            value={commentInput[post.id] ?? ''}
+                            onChange={(e) =>
+                              setCommentInput((prev) => ({ ...prev, [post.id]: e.target.value }))
+                            }
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') submitComment(post.id)
+                            }}
+                            placeholder="댓글을 입력하세요..."
+                            className="flex-1 bg-[#0d1117] border border-[#30363d] text-[#e6edf3] rounded-lg px-3 py-2 text-sm placeholder-[#484f58] focus:outline-none focus:border-[#7c3aed]"
+                          />
+                          <button
+                            onClick={() => submitComment(post.id)}
+                            className="bg-[#7c3aed] text-white px-3 py-2 rounded-lg text-sm hover:bg-[#6d28d9] transition-colors"
+                          >
+                            등록
+                          </button>
+                        </div>
+                      ) : (
+                        <p className="text-[#484f58] text-sm mt-3">
+                          댓글을 달려면 로그인하세요
+                        </p>
+                      )}
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+          )
+        })}
       </div>
 
       {hasMore && (

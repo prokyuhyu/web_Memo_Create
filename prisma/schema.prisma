@@ -52,6 +52,7 @@ model User {
   macros        Macro[]
   chatRooms     ChatRoomParticipant[]
   sentMessages  ChatMessage[]
+  comments      Comment[]
 }
 
 model RefreshToken {
@@ -120,7 +121,8 @@ model Note {
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  comments Comment[]
 
   @@index([userId])
 }
@@ -196,5 +198,22 @@ model Macro {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([userId])
+}
+
+// ─── Comments ─────────────────────────────────────────────────────────────────
+
+model Comment {
+  id        String   @id @default(cuid())
+  noteId    String
+  userId    String
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  note Note @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([noteId])
   @@index([userId])
 }
