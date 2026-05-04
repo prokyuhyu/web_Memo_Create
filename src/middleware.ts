@@ -11,6 +11,16 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
+  // Public note pages — no auth required
+  if (pathname.startsWith('/notes/')) {
+    return NextResponse.next()
+  }
+
+  // Public notes API — let the route handler decide based on isPublic
+  if (pathname.startsWith('/api/v1/notes/') && request.method === 'GET') {
+    return NextResponse.next()
+  }
+
   // Protected API routes — require valid Bearer token
   if (pathname.startsWith('/api/v1/')) {
     const authHeader = request.headers.get('authorization')
