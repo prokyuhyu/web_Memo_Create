@@ -12,7 +12,9 @@
       "Bash(git push *)",
       "Bash(gh pr *)",
       "Bash(git commit *)",
-      "Bash(npm run *)"
+      "Bash(npm run *)",
+      "Bash(mkdir -p \"src/app/api/v1/community/[noteId]/comments\")",
+      "Bash(mkdir -p \"src/app/api/v1/community/[noteId]/comments/[commentId]\")"
     ]
   }
 }
