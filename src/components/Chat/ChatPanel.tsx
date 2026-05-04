@@ -298,7 +298,7 @@ export default function ChatPanel({ currentUserId, onUnreadChange }: Props) {
               className="flex-1 bg-[#21262d] text-[#e6edf3] rounded-full px-4 py-2 text-sm border-none focus:outline-none focus:ring-1 focus:ring-[#7c3aed] placeholder-[#484f58]"
             />
             <div
-              onClick={sendMessage}
+              onClick={() => sendMessage()}
               className="bg-[#7c3aed] hover:bg-[#6d28d9] rounded-full p-2 cursor-pointer transition-colors flex items-center justify-center shrink-0"
             >
               <Send size={16} className="text-white" />
