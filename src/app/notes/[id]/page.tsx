@@ -14,16 +14,19 @@ type Note = {
 
 async function fetchNote(id: string): Promise<Note | null> {
   try {
-    const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL ?? ''}/api/v1/notes/${id}`,
-      { cache: 'no-store' },
-    )
+    const base = process.env.NEXT_PUBLIC_APP_URL ?? 'https://procook.kro.kr'
+    const url = `${base}/api/v1/notes/${id}`
+    console.log('Fetching note:', url)
+    const res = await fetch(url, { cache: 'no-store' })
+    console.log('Response status:', res.status)
+    const data = await res.json()
+    console.log('Response data:', data)
     if (!res.ok) return null
-    const json = await res.json()
-    const note: Note = json?.data?.note
+    const note: Note = data?.data?.note
     if (!note || !note.isPublic) return null
     return note
-  } catch {
+  } catch (e) {
+    console.error('fetchNote error:', e)
     return null
   }
 }
