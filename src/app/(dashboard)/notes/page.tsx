@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Plus, Pencil, Trash2, X, Check, Tag } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
@@ -45,6 +45,77 @@ function noteToSyncItem(note: Note) {
 
 const inputCls =
   'w-full bg-[#0d1117] text-[#e6edf3] border border-[#30363d] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#7c3aed] focus:ring-1 focus:ring-[#7c3aed] placeholder-[#484f58]'
+
+// ─── Note Modal ───────────────────────────────────────────────────────────
+
+function NoteModal({ note, onClose }: { note: Note; onClose: () => void }) {
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [onClose])
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        className="bg-[#161b22] border border-[#30363d] rounded-xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex items-start justify-between p-6 border-b border-[#30363d]">
+          <div className="flex-1 pr-4">
+            <div className="flex items-center gap-2 mb-2">
+              {note.isPublic && (
+                <span className="text-xs bg-[#238636]/20 text-[#238636] rounded-full px-2 py-0.5">
+                  Public
+                </span>
+              )}
+              <span className="text-[#484f58] text-xs">
+                updated {formatDistanceToNow(new Date(note.updatedAt), { addSuffix: true })}
+              </span>
+            </div>
+            <h2 className="text-[#e6edf3] font-semibold text-xl">{note.title}</h2>
+          </div>
+          <button
+            onClick={onClose}
+            className="text-[#8b949e] hover:text-[#e6edf3] transition-colors flex-shrink-0"
+          >
+            <X size={20} />
+          </button>
+        </div>
+
+        {/* Body */}
+        <div className="p-6">
+          <p className="text-[#8b949e] text-sm leading-relaxed whitespace-pre-wrap">{note.body}</p>
+
+          {note.tags.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 mt-4">
+              {note.tags.map((tag) => (
+                <span
+                  key={tag}
+                  className="inline-flex items-center gap-1 text-xs bg-[#7c3aed]/20 text-[#7c3aed] rounded-full px-2 py-0.5"
+                >
+                  <Tag size={10} />
+                  {tag}
+                </span>
+              ))}
+            </div>
+          )}
+
+          <div className="mt-4 pt-4 border-t border-[#30363d] flex gap-4 text-xs text-[#484f58]">
+            <span>생성: {formatDistanceToNow(new Date(note.createdAt), { addSuffix: true })}</span>
+            <span>수정: {formatDistanceToNow(new Date(note.updatedAt), { addSuffix: true })}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 // ─── Create form ──────────────────────────────────────────────────────────
 
@@ -134,7 +205,7 @@ function CreateNoteForm({ onDone }: { onDone: () => void }) {
 
 // ─── Note card ────────────────────────────────────────────────────────────
 
-function NoteCard({ note }: { note: Note }) {
+function NoteCard({ note, onOpenDetail }: { note: Note; onOpenDetail: (note: Note) => void }) {
   const qc = useQueryClient()
   const { addSyncItem } = useSyncQueue()
   const [editing, setEditing] = useState(false)
@@ -227,26 +298,26 @@ function NoteCard({ note }: { note: Note }) {
   }
 
   return (
-    <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-4 hover:border-[#7c3aed]/50 transition-colors space-y-3">
+    <div
+      className="bg-[#161b22] border border-[#30363d] rounded-xl p-4 hover:border-[#7c3aed]/50 transition-colors space-y-3 cursor-pointer"
+      onClick={() => onOpenDetail(note)}
+    >
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
       {error && <p className="text-xs text-[#da3633]">{error}</p>}
 
       <div className="flex items-start justify-between gap-2">
-        <h3
-          className="font-semibold text-[#e6edf3] cursor-pointer hover:text-[#7c3aed] transition-colors flex-1 min-w-0"
-          onClick={() => setEditing(true)}
-        >
+        <h3 className="font-semibold text-[#e6edf3] flex-1 min-w-0">
           {note.title}
         </h3>
         <div className="flex items-center gap-1 shrink-0">
           <div
-            onClick={() => setEditing(true)}
+            onClick={(e) => { e.stopPropagation(); setEditing(true) }}
             className="p-1.5 rounded-lg text-[#8b949e] hover:text-[#e6edf3] hover:bg-[#21262d] cursor-pointer transition-colors"
           >
             <Pencil size={14} />
           </div>
           <div
-            onClick={() => setConfirmDelete(true)}
+            onClick={(e) => { e.stopPropagation(); setConfirmDelete(true) }}
             className="p-1.5 rounded-lg text-[#8b949e] hover:text-[#da3633] hover:bg-[#da3633]/10 cursor-pointer transition-colors"
           >
             <Trash2 size={14} />
@@ -284,7 +355,10 @@ function NoteCard({ note }: { note: Note }) {
       </div>
 
       {confirmDelete && (
-        <div className="rounded-lg bg-[#da3633]/10 border border-[#da3633]/30 p-3 flex items-center justify-between gap-3">
+        <div
+          className="rounded-lg bg-[#da3633]/10 border border-[#da3633]/30 p-3 flex items-center justify-between gap-3"
+          onClick={(e) => e.stopPropagation()}
+        >
           <span className="text-xs text-[#da3633]">Delete this note?</span>
           <div className="flex gap-2">
             <div
@@ -311,6 +385,7 @@ function NoteCard({ note }: { note: Note }) {
 
 export default function NotesPage() {
   const [creating, setCreating] = useState(false)
+  const [selectedNote, setSelectedNote] = useState<Note | null>(null)
 
   const { data, isLoading, isError } = useQuery<NotesResponse>({
     queryKey: ['notes'],
@@ -321,6 +396,10 @@ export default function NotesPage() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
+      {selectedNote && (
+        <NoteModal note={selectedNote} onClose={() => setSelectedNote(null)} />
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-[#e6edf3]">Notes</h1>
@@ -356,7 +435,7 @@ export default function NotesPage() {
       )}
       <div className="space-y-4">
         {notes.map((note) => (
-          <NoteCard key={note.id} note={note} />
+          <NoteCard key={note.id} note={note} onOpenDetail={setSelectedNote} />
         ))}
       </div>
     </div>

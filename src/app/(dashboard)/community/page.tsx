@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { formatDistanceToNow } from 'date-fns'
-import { Tag } from 'lucide-react'
+import { Tag, X } from 'lucide-react'
 
 type Post = {
   id: string
@@ -47,6 +47,151 @@ function getCurrentUserId(): string | null {
   }
 }
 
+type PostModalProps = {
+  post: Post
+  comments: Comment[]
+  isLoadingComments: boolean
+  currentUserId: string | null
+  commentInput: string
+  onClose: () => void
+  onCommentInputChange: (value: string) => void
+  onSubmitComment: () => void
+  onDeleteComment: (commentId: string) => void
+}
+
+function PostModal({
+  post,
+  comments,
+  isLoadingComments,
+  currentUserId,
+  commentInput,
+  onClose,
+  onCommentInputChange,
+  onSubmitComment,
+  onDeleteComment,
+}: PostModalProps) {
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [onClose])
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        className="bg-[#161b22] border border-[#30363d] rounded-xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex items-start justify-between p-6 border-b border-[#30363d]">
+          <div className="flex-1 pr-4">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="bg-[#7c3aed]/20 text-[#7c3aed] text-xs px-2 py-0.5 rounded-full">
+                by {post.authorName}
+              </span>
+              <span className="text-[#484f58] text-xs">
+                {formatDistanceToNow(new Date(post.updatedAt), { addSuffix: true })}
+              </span>
+            </div>
+            <h2 className="text-[#e6edf3] font-semibold text-xl">{post.title}</h2>
+          </div>
+          <button
+            onClick={onClose}
+            className="text-[#8b949e] hover:text-[#e6edf3] transition-colors flex-shrink-0"
+          >
+            <X size={20} />
+          </button>
+        </div>
+
+        {/* Body */}
+        <div className="p-6">
+          <p className="text-[#8b949e] text-sm leading-relaxed whitespace-pre-wrap">{post.body}</p>
+
+          {post.tags.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 mt-4">
+              {post.tags.map((tag) => (
+                <span
+                  key={tag}
+                  className="inline-flex items-center gap-1 bg-[#21262d] text-[#8b949e] text-xs px-2 py-0.5 rounded-full"
+                >
+                  <Tag size={10} />
+                  {tag}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Comments */}
+        <div className="border-t border-[#30363d] px-6 pb-6 pt-4">
+          <h3 className="text-[#e6edf3] text-sm font-medium mb-3">
+            댓글 {comments.length}개
+          </h3>
+
+          {isLoadingComments ? (
+            <p className="text-[#484f58] text-sm text-center py-2">불러오는 중…</p>
+          ) : (
+            <>
+              {comments.map((comment) => (
+                <div
+                  key={comment.id}
+                  className="bg-[#21262d] rounded-lg px-3 py-2 mb-2 flex flex-col"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-[#7c3aed] text-xs font-medium">
+                      by {comment.authorName}
+                    </span>
+                    {comment.userId === currentUserId && (
+                      <button
+                        onClick={() => onDeleteComment(comment.id)}
+                        className="text-[#da3633] text-xs hover:underline ml-auto"
+                      >
+                        삭제
+                      </button>
+                    )}
+                  </div>
+                  <p className="text-[#e6edf3] text-sm mt-1">{comment.content}</p>
+                  <span className="text-[#484f58] text-xs mt-1">
+                    {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}
+                  </span>
+                </div>
+              ))}
+
+              {currentUserId ? (
+                <div className="flex gap-2 mt-3">
+                  <input
+                    type="text"
+                    value={commentInput}
+                    onChange={(e) => onCommentInputChange(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') onSubmitComment()
+                    }}
+                    placeholder="댓글을 입력하세요..."
+                    className="flex-1 bg-[#0d1117] border border-[#30363d] text-[#e6edf3] rounded-lg px-3 py-2 text-sm placeholder-[#484f58] focus:outline-none focus:border-[#7c3aed]"
+                  />
+                  <button
+                    onClick={onSubmitComment}
+                    className="bg-[#7c3aed] text-white px-3 py-2 rounded-lg text-sm hover:bg-[#6d28d9] transition-colors"
+                  >
+                    등록
+                  </button>
+                </div>
+              ) : (
+                <p className="text-[#484f58] text-sm mt-3">댓글을 달려면 로그인하세요</p>
+              )}
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function CommunityPage() {
   const [posts, setPosts] = useState<Post[]>([])
   const [total, setTotal] = useState(0)
@@ -62,6 +207,8 @@ export default function CommunityPage() {
   const [comments, setComments] = useState<Record<string, Comment[]>>({})
   const [commentInput, setCommentInput] = useState<Record<string, string>>({})
   const [isLoadingComments, setIsLoadingComments] = useState<Record<string, boolean>>({})
+
+  const [selectedPost, setSelectedPost] = useState<Post | null>(null)
 
   useEffect(() => {
     setCurrentUserId(getCurrentUserId())
@@ -131,6 +278,20 @@ export default function CommunityPage() {
     [comments, fetchComments],
   )
 
+  const openPostModal = useCallback(
+    (post: Post) => {
+      setSelectedPost(post)
+      if (!comments[post.id]) {
+        fetchComments(post.id)
+      }
+    },
+    [comments, fetchComments],
+  )
+
+  const closePostModal = useCallback(() => {
+    setSelectedPost(null)
+  }, [])
+
   const submitComment = useCallback(
     async (noteId: string) => {
       const content = (commentInput[noteId] ?? '').trim()
@@ -175,6 +336,22 @@ export default function CommunityPage() {
 
   return (
     <div className="max-w-2xl mx-auto">
+      {selectedPost && (
+        <PostModal
+          post={selectedPost}
+          comments={comments[selectedPost.id] ?? []}
+          isLoadingComments={isLoadingComments[selectedPost.id] ?? false}
+          currentUserId={currentUserId}
+          commentInput={commentInput[selectedPost.id] ?? ''}
+          onClose={closePostModal}
+          onCommentInputChange={(value) =>
+            setCommentInput((prev) => ({ ...prev, [selectedPost.id]: value }))
+          }
+          onSubmitComment={() => submitComment(selectedPost.id)}
+          onDeleteComment={(commentId) => deleteComment(selectedPost.id, commentId)}
+        />
+      )}
+
       <h1 className="text-2xl font-bold text-[#e6edf3] mb-2">커뮤니티</h1>
       <p className="text-[#8b949e] text-sm mb-6">공개된 노트들을 모아볼 수 있는 공간입니다</p>
 
@@ -209,7 +386,8 @@ export default function CommunityPage() {
           return (
             <div
               key={post.id}
-              className="bg-[#161b22] border border-[#30363d] rounded-xl p-5 hover:border-[#7c3aed]/50 transition-colors"
+              onClick={() => openPostModal(post)}
+              className="bg-[#161b22] border border-[#30363d] rounded-xl p-5 hover:border-[#7c3aed]/50 transition-colors cursor-pointer"
             >
               <div className="flex items-center gap-2 mb-2">
                 <span className="bg-[#7c3aed]/20 text-[#7c3aed] text-xs px-2 py-0.5 rounded-full">
@@ -219,8 +397,8 @@ export default function CommunityPage() {
 
               <h2 className="text-[#e6edf3] font-semibold text-lg mb-2">{post.title}</h2>
 
-              <p className="text-[#8b949e] text-sm leading-relaxed mb-3">
-                {post.body.length >= 200 ? post.body + '…' : post.body}
+              <p className="text-[#8b949e] text-sm leading-relaxed mb-3 line-clamp-3">
+                {post.body}
               </p>
 
               {post.tags.length > 0 && (
@@ -242,7 +420,10 @@ export default function CommunityPage() {
                   {formatDistanceToNow(new Date(post.updatedAt), { addSuffix: true })}
                 </span>
                 <button
-                  onClick={() => toggleComments(post.id)}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    toggleComments(post.id)
+                  }}
                   className="text-[#8b949e] hover:text-[#7c3aed] text-sm flex items-center gap-1 transition-colors"
                 >
                   💬 댓글 {isOpen ? commentCount : ''}개
@@ -250,7 +431,10 @@ export default function CommunityPage() {
               </div>
 
               {isOpen && (
-                <div className="border-t border-[#30363d] mt-4 pt-4">
+                <div
+                  className="border-t border-[#30363d] mt-4 pt-4"
+                  onClick={(e) => e.stopPropagation()}
+                >
                   {isLoadingComments[post.id] ? (
                     <p className="text-[#484f58] text-sm text-center py-2">불러오는 중…</p>
                   ) : (
