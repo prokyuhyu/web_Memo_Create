@@ -336,7 +336,7 @@ export default function CommunityPage() {
   const hasMore = posts.length < total
 
   return (
-    <div className="max-w-2xl mx-auto">
+    <>
       {selectedPost && (
         <PostModal
           post={selectedPost}
@@ -353,6 +353,7 @@ export default function CommunityPage() {
         />
       )}
 
+      <div className="max-w-2xl mx-auto">
       <h1 className="text-2xl font-bold text-[#e6edf3] mb-2">커뮤니티</h1>
       <p className="text-[#8b949e] text-sm mb-6">공개된 노트들을 모아볼 수 있는 공간입니다</p>
 
@@ -512,5 +513,6 @@ export default function CommunityPage() {
         </div>
       )}
     </div>
+    </>
   )
 }
