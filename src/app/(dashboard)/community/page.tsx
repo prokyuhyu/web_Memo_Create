@@ -71,7 +71,10 @@ function PostModal({
   onSubmitComment,
   onDeleteComment,
 }: PostModalProps) {
+  const [mounted, setMounted] = useState(false)
+
   useEffect(() => {
+    setMounted(true)
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose()
     }
@@ -79,13 +82,33 @@ function PostModal({
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [onClose])
 
+  if (!mounted) return null
+
   return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm"
+      style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 9999,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: 'rgba(0,0,0,0.7)',
+        backdropFilter: 'blur(4px)',
+      }}
       onClick={onClose}
     >
       <div
-        className="bg-[#161b22] border border-[#30363d] rounded-xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto"
+        style={{
+          backgroundColor: '#161b22',
+          border: '1px solid #30363d',
+          borderRadius: '12px',
+          width: '100%',
+          maxWidth: '672px',
+          margin: '0 16px',
+          maxHeight: '90vh',
+          overflowY: 'auto',
+        }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
