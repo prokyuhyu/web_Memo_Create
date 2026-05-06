@@ -80,11 +80,11 @@ function PostModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-start justify-center bg-black/70 backdrop-blur-sm overflow-y-auto py-8"
       onClick={onClose}
     >
       <div
-        className="bg-[#161b22] border border-[#30363d] rounded-xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto"
+        className="bg-[#161b22] border border-[#30363d] rounded-xl w-full max-w-2xl mx-4 my-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
