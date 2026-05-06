@@ -86,33 +86,15 @@ function PostModal({
 
   return createPortal(
     <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        zIndex: 9999,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: 'rgba(0,0,0,0.7)',
-        backdropFilter: 'blur(4px)',
-      }}
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm"
       onClick={onClose}
     >
       <div
-        style={{
-          backgroundColor: '#161b22',
-          border: '1px solid #30363d',
-          borderRadius: '12px',
-          width: '100%',
-          maxWidth: '672px',
-          margin: '0 16px',
-          maxHeight: '90vh',
-          overflowY: 'auto',
-        }}
+        className="bg-[#161b22] border border-[#30363d] rounded-xl w-[calc(100%-32px)] max-w-2xl max-h-[90vh] flex flex-col overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
-        <div className="flex items-start justify-between p-6 border-b border-[#30363d]">
+        {/* Header — 고정 */}
+        <div className="flex items-start justify-between p-6 border-b border-[#30363d] shrink-0">
           <div className="flex-1 pr-4">
             <div className="flex items-center gap-2 mb-2">
               <span className="bg-[#7c3aed]/20 text-[#7c3aed] text-xs px-2 py-0.5 rounded-full">
@@ -122,7 +104,7 @@ function PostModal({
                 {formatDistanceToNow(new Date(post.updatedAt), { addSuffix: true })}
               </span>
             </div>
-            <h2 className="text-[#e6edf3] font-semibold text-xl">{post.title}</h2>
+            <h2 className="text-[#e6edf3] font-semibold text-xl break-words">{post.title}</h2>
           </div>
           <button
             onClick={onClose}
@@ -132,84 +114,89 @@ function PostModal({
           </button>
         </div>
 
-        {/* Body */}
-        <div className="p-6">
-          <p className="text-[#8b949e] text-sm leading-relaxed whitespace-pre-wrap">{post.body}</p>
+        {/* Body + Comments — 스크롤 영역 */}
+        <div className="flex-1 overflow-y-auto">
+          {/* Body */}
+          <div className="p-6">
+            <p className="text-[#8b949e] text-sm leading-relaxed whitespace-pre-wrap break-words">
+              {post.body}
+            </p>
 
-          {post.tags.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 mt-4">
-              {post.tags.map((tag) => (
-                <span
-                  key={tag}
-                  className="inline-flex items-center gap-1 bg-[#21262d] text-[#8b949e] text-xs px-2 py-0.5 rounded-full"
-                >
-                  <Tag size={10} />
-                  {tag}
-                </span>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Comments */}
-        <div className="border-t border-[#30363d] px-6 pb-6 pt-4">
-          <h3 className="text-[#e6edf3] text-sm font-medium mb-3">
-            댓글 {comments.length}개
-          </h3>
-
-          {isLoadingComments ? (
-            <p className="text-[#484f58] text-sm text-center py-2">불러오는 중…</p>
-          ) : (
-            <>
-              {comments.map((comment) => (
-                <div
-                  key={comment.id}
-                  className="bg-[#21262d] rounded-lg px-3 py-2 mb-2 flex flex-col"
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="text-[#7c3aed] text-xs font-medium">
-                      by {comment.authorName}
-                    </span>
-                    {comment.userId === currentUserId && (
-                      <button
-                        onClick={() => onDeleteComment(comment.id)}
-                        className="text-[#da3633] text-xs hover:underline ml-auto"
-                      >
-                        삭제
-                      </button>
-                    )}
-                  </div>
-                  <p className="text-[#e6edf3] text-sm mt-1">{comment.content}</p>
-                  <span className="text-[#484f58] text-xs mt-1">
-                    {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}
-                  </span>
-                </div>
-              ))}
-
-              {currentUserId ? (
-                <div className="flex gap-2 mt-3">
-                  <input
-                    type="text"
-                    value={commentInput}
-                    onChange={(e) => onCommentInputChange(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') onSubmitComment()
-                    }}
-                    placeholder="댓글을 입력하세요..."
-                    className="flex-1 bg-[#0d1117] border border-[#30363d] text-[#e6edf3] rounded-lg px-3 py-2 text-sm placeholder-[#484f58] focus:outline-none focus:border-[#7c3aed]"
-                  />
-                  <button
-                    onClick={onSubmitComment}
-                    className="bg-[#7c3aed] text-white px-3 py-2 rounded-lg text-sm hover:bg-[#6d28d9] transition-colors"
+            {post.tags.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mt-4">
+                {post.tags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="inline-flex items-center gap-1 bg-[#21262d] text-[#8b949e] text-xs px-2 py-0.5 rounded-full"
                   >
-                    등록
-                  </button>
-                </div>
-              ) : (
-                <p className="text-[#484f58] text-sm mt-3">댓글을 달려면 로그인하세요</p>
-              )}
-            </>
-          )}
+                    <Tag size={10} />
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Comments */}
+          <div className="border-t border-[#30363d] px-6 pb-6 pt-4">
+            <h3 className="text-[#e6edf3] text-sm font-medium mb-3">
+              댓글 {comments.length}개
+            </h3>
+
+            {isLoadingComments ? (
+              <p className="text-[#484f58] text-sm text-center py-2">불러오는 중…</p>
+            ) : (
+              <>
+                {comments.map((comment) => (
+                  <div
+                    key={comment.id}
+                    className="bg-[#21262d] rounded-lg px-3 py-2 mb-2 flex flex-col"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-[#7c3aed] text-xs font-medium">
+                        by {comment.authorName}
+                      </span>
+                      {comment.userId === currentUserId && (
+                        <button
+                          onClick={() => onDeleteComment(comment.id)}
+                          className="text-[#da3633] text-xs hover:underline ml-auto"
+                        >
+                          삭제
+                        </button>
+                      )}
+                    </div>
+                    <p className="text-[#e6edf3] text-sm mt-1 break-words">{comment.content}</p>
+                    <span className="text-[#484f58] text-xs mt-1">
+                      {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}
+                    </span>
+                  </div>
+                ))}
+
+                {currentUserId ? (
+                  <div className="flex gap-2 mt-3">
+                    <input
+                      type="text"
+                      value={commentInput}
+                      onChange={(e) => onCommentInputChange(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') onSubmitComment()
+                      }}
+                      placeholder="댓글을 입력하세요..."
+                      className="flex-1 bg-[#0d1117] border border-[#30363d] text-[#e6edf3] rounded-lg px-3 py-2 text-sm placeholder-[#484f58] focus:outline-none focus:border-[#7c3aed]"
+                    />
+                    <button
+                      onClick={onSubmitComment}
+                      className="bg-[#7c3aed] text-white px-3 py-2 rounded-lg text-sm hover:bg-[#6d28d9] transition-colors"
+                    >
+                      등록
+                    </button>
+                  </div>
+                ) : (
+                  <p className="text-[#484f58] text-sm mt-3">댓글을 달려면 로그인하세요</p>
+                )}
+              </>
+            )}
+          </div>
         </div>
       </div>
     </div>,
