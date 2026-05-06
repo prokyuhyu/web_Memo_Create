@@ -84,7 +84,8 @@ function PostModal({
       onClick={onClose}
     >
       <div
-        className="bg-[#161b22] border border-[#30363d] rounded-xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto"
+        className="bg-[#161b22] border border-[#30363d] rounded-xl w-full max-w-2xl mx-4"
+        style={{ maxHeight: '90vh', overflowY: 'auto' }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
