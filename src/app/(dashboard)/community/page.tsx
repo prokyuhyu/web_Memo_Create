@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import { formatDistanceToNow } from 'date-fns'
 import { Tag, X } from 'lucide-react'
 
@@ -78,7 +79,7 @@ function PostModal({
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [onClose])
 
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm"
       onClick={onClose}
@@ -188,7 +189,8 @@ function PostModal({
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
 
@@ -207,20 +209,17 @@ export default function CommunityPage() {
   const [comments, setComments] = useState<Record<string, Comment[]>>({})
   const [commentInput, setCommentInput] = useState<Record<string, string>>({})
   const [isLoadingComments, setIsLoadingComments] = useState<Record<string, boolean>>({})
-
   const [selectedPost, setSelectedPost] = useState<Post | null>(null)
 
   useEffect(() => {
     setCurrentUserId(getCurrentUserId())
   }, [])
 
-  // 500ms debounce
   useEffect(() => {
     const t = setTimeout(() => setDebouncedSearch(search), 500)
     return () => clearTimeout(t)
   }, [search])
 
-  // Reset and fetch on search change
   useEffect(() => {
     setPage(1)
     setPosts([])
@@ -268,9 +267,7 @@ export default function CommunityPage() {
           next.delete(noteId)
         } else {
           next.add(noteId)
-          if (!comments[noteId]) {
-            fetchComments(noteId)
-          }
+          if (!comments[noteId]) fetchComments(noteId)
         }
         return next
       })
@@ -281,16 +278,12 @@ export default function CommunityPage() {
   const openPostModal = useCallback(
     (post: Post) => {
       setSelectedPost(post)
-      if (!comments[post.id]) {
-        fetchComments(post.id)
-      }
+      if (!comments[post.id]) fetchComments(post.id)
     },
     [comments, fetchComments],
   )
 
-  const closePostModal = useCallback(() => {
-    setSelectedPost(null)
-  }, [])
+  const closePostModal = useCallback(() => setSelectedPost(null), [])
 
   const submitComment = useCallback(
     async (noteId: string) => {
