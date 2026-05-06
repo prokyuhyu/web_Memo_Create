@@ -71,10 +71,7 @@ function PostModal({
   onSubmitComment,
   onDeleteComment,
 }: PostModalProps) {
-  const [mounted, setMounted] = useState(false)
-
   useEffect(() => {
-    setMounted(true)
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose()
     }
@@ -82,19 +79,39 @@ function PostModal({
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [onClose])
 
-  if (!mounted) return null
-
   return createPortal(
     <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm"
+      style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 9999,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: 'rgba(0,0,0,0.7)',
+        backdropFilter: 'blur(4px)',
+      }}
       onClick={onClose}
     >
       <div
-        className="bg-[#161b22] border border-[#30363d] rounded-xl w-[calc(100%-32px)] max-w-2xl max-h-[90vh] flex flex-col overflow-hidden"
+        style={{
+          backgroundColor: '#161b22',
+          border: '1px solid #30363d',
+          borderRadius: '12px',
+          width: 'calc(100% - 32px)',
+          maxWidth: '672px',
+          maxHeight: '90vh',
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+        }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header — 고정 */}
-        <div className="flex items-start justify-between p-6 border-b border-[#30363d] shrink-0">
+        <div
+          style={{ padding: '24px', borderBottom: '1px solid #30363d', flexShrink: 0 }}
+          className="flex items-start justify-between"
+        >
           <div className="flex-1 pr-4">
             <div className="flex items-center gap-2 mb-2">
               <span className="bg-[#7c3aed]/20 text-[#7c3aed] text-xs px-2 py-0.5 rounded-full">
@@ -115,10 +132,12 @@ function PostModal({
         </div>
 
         {/* Body + Comments — 스크롤 영역 */}
-        <div className="flex-1 overflow-y-auto">
-          {/* Body */}
-          <div className="p-6">
-            <p className="text-[#8b949e] text-sm leading-relaxed whitespace-pre-wrap break-words">
+        <div style={{ flex: 1, overflowY: 'auto' }}>
+          <div style={{ padding: '24px' }}>
+            <p
+              style={{ wordBreak: 'break-word', whiteSpace: 'pre-wrap' }}
+              className="text-[#8b949e] text-sm leading-relaxed"
+            >
               {post.body}
             </p>
 
@@ -137,8 +156,7 @@ function PostModal({
             )}
           </div>
 
-          {/* Comments */}
-          <div className="border-t border-[#30363d] px-6 pb-6 pt-4">
+          <div style={{ borderTop: '1px solid #30363d', padding: '16px 24px 24px' }}>
             <h3 className="text-[#e6edf3] text-sm font-medium mb-3">
               댓글 {comments.length}개
             </h3>
@@ -165,7 +183,12 @@ function PostModal({
                         </button>
                       )}
                     </div>
-                    <p className="text-[#e6edf3] text-sm mt-1 break-words">{comment.content}</p>
+                    <p
+                      style={{ wordBreak: 'break-word' }}
+                      className="text-[#e6edf3] text-sm mt-1"
+                    >
+                      {comment.content}
+                    </p>
                     <span className="text-[#484f58] text-xs mt-1">
                       {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}
                     </span>
