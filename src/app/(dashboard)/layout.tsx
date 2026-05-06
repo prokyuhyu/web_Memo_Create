@@ -128,7 +128,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <SyncContext.Provider value={{ addSyncItem }}>
-      <div className="flex h-screen overflow-hidden bg-[#0d1117]">
+      <div className="flex h-screen bg-[#0d1117]">
         {/* Mobile overlay backdrop */}
         {sidebarOpen && (
           <div
