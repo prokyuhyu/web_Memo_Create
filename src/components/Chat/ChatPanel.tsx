@@ -303,35 +303,46 @@ export default function ChatPanel({ currentUserId, onUnreadChange }: Props) {
             {messages.map((msg) => {
               const isMine = msg.senderId === currentUserId
               return (
-                <div key={msg.id} className={`flex flex-col ${isMine ? 'items-end' : 'items-start'}`}>
-                  {!isMine && (
-                    <span className="text-[#8b949e] text-xs mb-1 px-1">{msg.senderName}</span>
-                  )}
-                  <div className={`flex items-end gap-1.5 ${isMine ? 'flex-row-reverse' : 'flex-row'}`}>
-                    <div
-                      className={`px-3 py-2 max-w-[70%] text-sm break-words ${
-                        isMine
-                          ? 'bg-[#7c3aed] text-white rounded-2xl rounded-br-sm'
-                          : 'bg-[#21262d] text-[#e6edf3] rounded-2xl rounded-bl-sm'
-                      } ${msg.isFailed ? 'border border-red-500' : ''}`}
-                    >
-                      {msg.content}
-                    </div>
+                <div key={msg.id} className="flex flex-col w-full">
+                {!isMine && (
+                  <span className="text-[#8b949e] text-xs mb-1 px-1 self-start">
+                    {msg.senderName}
+                  </span>
+                )}
+              
+                <div className={`flex items-end gap-1.5 w-full ${isMine ? 'justify-end' : 'justify-start'}`}>
+                  <div
+                    className={`px-3 py-2 max-w-[70%] w-fit text-sm whitespace-pre-wrap break-words ${
+                      isMine
+                        ? 'bg-[#7c3aed] text-white rounded-2xl rounded-br-sm'
+                        : 'bg-[#21262d] text-[#e6edf3] rounded-2xl rounded-bl-sm'
+                    } ${msg.isFailed ? 'border border-red-500' : ''}`}
+                  >
+                    {msg.content}
                   </div>
-                  {msg.isFailed && (
-                    <button
-                      onClick={() => sendMessage(msg.content)}
-                      className="text-red-400 text-xs mt-0.5 px-1 hover:text-red-300 transition-colors"
-                    >
-                      전송 실패 · 다시 시도
-                    </button>
-                  )}
-                  {!msg.isFailed && (
-                    <span className="text-[#484f58] text-xs mt-0.5 px-1">
-                      {formatDistanceToNow(new Date(msg.createdAt), { addSuffix: true })}
-                    </span>
-                  )}
                 </div>
+              
+                {msg.isFailed && (
+                  <button
+                    onClick={() => sendMessage(msg.content)}
+                    className={`text-red-400 text-xs mt-0.5 px-1 hover:text-red-300 transition-colors ${
+                      isMine ? 'self-end' : 'self-start'
+                    }`}
+                  >
+                    전송 실패 · 다시 시도
+                  </button>
+                )}
+              
+                {!msg.isFailed && (
+                  <span
+                    className={`text-[#484f58] text-xs mt-0.5 px-1 ${
+                      isMine ? 'self-end' : 'self-start'
+                    }`}
+                  >
+                    {formatDistanceToNow(new Date(msg.createdAt), { addSuffix: true })}
+                  </span>
+                )}
+              </div>
               )
             })}
             <div ref={messagesEndRef} />
