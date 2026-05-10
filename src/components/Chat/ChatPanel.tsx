@@ -57,21 +57,68 @@ export default function ChatPanel({ currentUserId, onUnreadChange }: Props) {
     onUnreadChange(unreadRooms.size)
   }, [unreadRooms, onUnreadChange])
 
+  const isSameOutgoingPending = useCallback(
+    (pending: Message, incoming: Message) => {
+      return (
+        pending.senderId === currentUserId &&
+        incoming.senderId === currentUserId &&
+        pending.content === incoming.content &&
+        (pending.isPending || pending.isFailed)
+      )
+    },
+    [currentUserId],
+  )
+  
+  const upsertMessage = useCallback(
+    (prev: Message[], incoming: Message) => {
+      if (prev.some((m) => m.id === incoming.id)) {
+        return prev.map((m) =>
+          m.id === incoming.id ? { ...incoming, isPending: false, isFailed: false } : m
+        )
+      }
+  
+      const pendingIndex = prev.findIndex((m) => isSameOutgoingPending(m, incoming))
+      if (pendingIndex !== -1) {
+        return prev.map((m, i) =>
+          i === pendingIndex ? { ...incoming, isPending: false, isFailed: false } : m
+        )
+      }
+  
+      return [...prev, incoming]
+    },
+    [isSameOutgoingPending],
+  )
+
   const fetchMessages = useCallback(async (roomId: string) => {
     try {
       const res = await api.get<{ success: boolean; data: { messages: Message[] } }>(
         `/chat/rooms/${roomId}/messages`,
       )
       const serverMessages = res.data.data.messages
-      const serverIds = new Set(serverMessages.map((m) => m.id))
+
       setMessages((prev) => {
-        const stillPending = prev.filter((m) => (m.isPending || m.isFailed) && !serverIds.has(m.id))
+        const stillPending = prev.filter((m) => {
+          if (!m.isPending && !m.isFailed) return false
+      
+          const alreadyArrived = serverMessages.some(
+            (serverMsg) =>
+              serverMsg.id === m.id ||
+              (
+                serverMsg.senderId === currentUserId &&
+                m.senderId === currentUserId &&
+                serverMsg.content === m.content
+              )
+          )
+      
+          return !alreadyArrived
+        })
+      
         return [...serverMessages, ...stillPending]
       })
     } catch {
       // silent
     }
-  }, [])
+  }, [currentUserId])
 
   // Enter chat room
   function openRoom(room: Room) {
@@ -94,10 +141,7 @@ export default function ChatPanel({ currentUserId, onUnreadChange }: Props) {
     const channel = pusher.subscribe(`chat-room-${activeRoom.id}`)
 
     channel.bind('new-message', (data: Message) => {
-      setMessages((prev) => {
-        if (prev.some((m) => m.id === data.id)) return prev
-        return [...prev, data]
-      })
+      setMessages((prev) => upsertMessage(prev, data))
     })
 
     pollRef.current = setInterval(() => fetchMessages(activeRoom.id), 3000)
@@ -107,7 +151,7 @@ export default function ChatPanel({ currentUserId, onUnreadChange }: Props) {
       pusher.unsubscribe(`chat-room-${activeRoom.id}`)
       if (pollRef.current) clearInterval(pollRef.current)
     }
-  }, [activeRoom, fetchMessages])
+  }, [activeRoom, fetchMessages, upsertMessage])
 
   // Auto-scroll on new messages
   useEffect(() => {
@@ -140,9 +184,18 @@ export default function ChatPanel({ currentUserId, onUnreadChange }: Props) {
         `/chat/rooms/${activeRoom.id}/messages`,
         { content },
       )
-      setMessages((prev) =>
-        prev.map((m) => m.id === tempId ? { ...res.data.data.message, isPending: false } : m)
-      )
+      setMessages((prev) => {
+        const saved = { ...res.data.data.message, isPending: false, isFailed: false }
+      
+        // temp 메시지가 있으면 saved로 교체하되,
+        // 이미 Pusher로 같은 saved id가 들어와 있으면 temp는 제거
+        if (prev.some((m) => m.id === tempId)) {
+          const withoutDuplicateSaved = prev.filter((m) => m.id !== saved.id)
+          return withoutDuplicateSaved.map((m) => (m.id === tempId ? saved : m))
+        }
+      
+        return upsertMessage(prev, saved)
+      })
       fetchRooms()
     } catch {
       setMessages((prev) =>
