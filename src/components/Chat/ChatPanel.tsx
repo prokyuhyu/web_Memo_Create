@@ -313,13 +313,10 @@ export default function ChatPanel({ currentUserId, onUnreadChange }: Props) {
                         isMine
                           ? 'bg-[#7c3aed] text-white rounded-2xl rounded-br-sm'
                           : 'bg-[#21262d] text-[#e6edf3] rounded-2xl rounded-bl-sm'
-                      } ${msg.isPending ? 'opacity-70' : ''} ${msg.isFailed ? 'border border-red-500' : ''}`}
+                      } ${msg.isFailed ? 'border border-red-500' : ''}`}
                     >
                       {msg.content}
                     </div>
-                    {msg.isPending && (
-                      <div className="w-3 h-3 rounded-full border border-white/30 border-t-white animate-spin shrink-0" />
-                    )}
                   </div>
                   {msg.isFailed && (
                     <button
@@ -329,7 +326,7 @@ export default function ChatPanel({ currentUserId, onUnreadChange }: Props) {
                       전송 실패 · 다시 시도
                     </button>
                   )}
-                  {!msg.isFailed && !msg.isPending && (
+                  {!msg.isFailed && (
                     <span className="text-[#484f58] text-xs mt-0.5 px-1">
                       {formatDistanceToNow(new Date(msg.createdAt), { addSuffix: true })}
                     </span>
