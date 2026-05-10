@@ -81,16 +81,19 @@ function PostModal({
 
   return createPortal(
     <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        zIndex: 9999,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: 'rgba(0,0,0,0.7)',
-        backdropFilter: 'blur(4px)',
-      }}
+    style={{
+      position: 'fixed',
+      inset: 0,
+      zIndex: 9999,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      height: '100dvh',
+      padding: '16px',
+      overflow: 'hidden',
+      backgroundColor: 'rgba(0,0,0,0.7)',
+      backdropFilter: 'blur(4px)',
+    }}
       onClick={onClose}
     >
       <div
@@ -105,7 +108,6 @@ function PostModal({
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header — 고정 */}
         <div
           style={{ padding: '24px', borderBottom: '1px solid #30363d', flexShrink: 0 }}
           className="flex items-start justify-between"
@@ -129,7 +131,6 @@ function PostModal({
           </button>
         </div>
 
-        {/* Body + Comments — 스크롤 영역 */}
         <div>
           <div style={{ padding: '24px' }}>
             <p
