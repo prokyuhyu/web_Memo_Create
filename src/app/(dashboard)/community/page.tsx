@@ -100,10 +100,8 @@ function PostModal({
           borderRadius: '12px',
           width: '100%',
           maxWidth: '672px',
-          maxHeight: '90dvh',
-          display: 'flex',
-          flexDirection: 'column',
-          overflow: 'hidden',
+          maxHeight: 'calc(100dvh - 32px)',
+          overflowY: 'auto',
         }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -132,7 +130,7 @@ function PostModal({
         </div>
 
         {/* Body + Comments — 스크롤 영역 */}
-        <div style={{ flex: 1, overflowY: 'auto' }}>
+        <div>
           <div style={{ padding: '24px' }}>
             <p
               style={{ wordBreak: 'break-word', whiteSpace: 'pre-wrap' }}
