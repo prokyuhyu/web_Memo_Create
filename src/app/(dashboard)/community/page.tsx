@@ -98,7 +98,7 @@ function PostModal({
           backgroundColor: '#161b22',
           border: '1px solid #30363d',
           borderRadius: '12px',
-          width: 'calc(100% - 32px)',
+          width: '100%',
           maxWidth: '672px',
           maxHeight: '90vh',
           display: 'flex',
