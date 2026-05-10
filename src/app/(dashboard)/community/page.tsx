@@ -100,7 +100,7 @@ function PostModal({
           borderRadius: '12px',
           width: '100%',
           maxWidth: '672px',
-          maxHeight: '90vh',
+          maxHeight: '90dvh',
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden',
