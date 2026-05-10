@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
   const posts = notes.map((note) => ({
     id: note.id,
     title: note.title,
-    body: note.body.length > 200 ? note.body.slice(0, 200) : note.body,
+    body: note.body,
     tags: note.tags,
     authorName: note.user.name,
     createdAt: note.createdAt,
