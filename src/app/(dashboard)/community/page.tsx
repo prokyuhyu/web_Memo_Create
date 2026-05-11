@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { formatDistanceToNow } from 'date-fns'
-import { Tag, X, Pin } from 'lucide-react'
+import { Tag, X, MoreVertical } from 'lucide-react'
 
 const PINNED_TAG = '__PINNED_NOTICE__'
 
@@ -12,15 +12,6 @@ type Post = {
   title: string
   body: string
   tags: string[]
-  authorName: string
-  createdAt: string
-  updatedAt: string
-}
-
-type PinnedNotice = {
-  id: string
-  title: string
-  body: string
   authorName: string
   createdAt: string
   updatedAt: string
@@ -47,18 +38,6 @@ async function fetchPosts(page: number, search: string): Promise<CommunityRespon
   return res.json()
 }
 
-async function fetchPinnedNotices(): Promise<PinnedNotice[]> {
-  try {
-    const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null
-    const res = await fetch('/api/v1/notices/pinned', {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-    })
-    const data = await res.json()
-    if (data.success) return data.data.notices as PinnedNotice[]
-  } catch {}
-  return []
-}
-
 function getCurrentUserId(): string | null {
   try {
     const token = localStorage.getItem('accessToken')
@@ -66,6 +45,17 @@ function getCurrentUserId(): string | null {
     const payload = token.split('.')[1]
     const decoded = JSON.parse(atob(payload))
     return decoded.userId ?? decoded.sub ?? null
+  } catch {
+    return null
+  }
+}
+
+function getTokenRole(): string | null {
+  try {
+    const token = localStorage.getItem('accessToken')
+    if (!token) return null
+    const decoded = JSON.parse(atob(token.split('.')[1]))
+    return decoded.role ?? null
   } catch {
     return null
   }
@@ -102,21 +92,23 @@ function PostModal({
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [onClose])
 
+  const visibleTags = post.tags.filter((t) => t !== PINNED_TAG)
+
   return createPortal(
     <div
-    style={{
-      position: 'fixed',
-      inset: 0,
-      zIndex: 9999,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      height: '100dvh',
-      padding: '16px',
-      overflow: 'hidden',
-      backgroundColor: 'rgba(0,0,0,0.7)',
-      backdropFilter: 'blur(4px)',
-    }}
+      style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 9999,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: '100dvh',
+        padding: '16px',
+        overflow: 'hidden',
+        backgroundColor: 'rgba(0,0,0,0.7)',
+        backdropFilter: 'blur(4px)',
+      }}
       onClick={onClose}
     >
       <div
@@ -163,9 +155,9 @@ function PostModal({
               {post.body}
             </p>
 
-            {post.tags.filter((t) => t !== PINNED_TAG).length > 0 && (
+            {visibleTags.length > 0 && (
               <div className="flex flex-wrap gap-1.5 mt-4">
-                {post.tags.filter((t) => t !== PINNED_TAG).map((tag) => (
+                {visibleTags.map((tag) => (
                   <span
                     key={tag}
                     className="inline-flex items-center gap-1 bg-[#21262d] text-[#8b949e] text-xs px-2 py-0.5 rounded-full"
@@ -259,19 +251,36 @@ export default function CommunityPage() {
   const [loadingMore, setLoadingMore] = useState(false)
   const [error, setError] = useState('')
 
-  const [pinnedNotices, setPinnedNotices] = useState<PinnedNotice[]>([])
-
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
+  const [userRole, setUserRole] = useState<string | null>(null)
   const [openCommentIds, setOpenCommentIds] = useState<Set<string>>(new Set())
   const [comments, setComments] = useState<Record<string, Comment[]>>({})
   const [commentInput, setCommentInput] = useState<Record<string, string>>({})
   const [isLoadingComments, setIsLoadingComments] = useState<Record<string, boolean>>({})
   const [selectedPost, setSelectedPost] = useState<Post | null>(null)
 
+  const [pinnedNotices, setPinnedNotices] = useState<Post[]>([])
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null)
+  const [actionMsg, setActionMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+
   useEffect(() => {
     setCurrentUserId(getCurrentUserId())
-    fetchPinnedNotices().then(setPinnedNotices)
+    setUserRole(getTokenRole())
   }, [])
+
+  const fetchPinnedNotices = useCallback(async () => {
+    try {
+      const res = await fetch('/api/v1/notices/pinned')
+      const data = await res.json()
+      if (data.success) setPinnedNotices(data.data.notices)
+    } catch {
+      // non-critical; silently ignore
+    }
+  }, [])
+
+  useEffect(() => {
+    fetchPinnedNotices()
+  }, [fetchPinnedNotices])
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedSearch(search), 500)
@@ -383,6 +392,57 @@ export default function CommunityPage() {
     }
   }, [])
 
+  const handlePinToggle = useCallback(
+    async (post: Post) => {
+      setOpenMenuId(null)
+      const token = localStorage.getItem('accessToken')
+      const isPinned = post.tags.includes(PINNED_TAG)
+      try {
+        const res = await fetch('/api/v1/admin/notices', {
+          method: isPinned ? 'DELETE' : 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ noteId: post.id }),
+        })
+        const data = await res.json().catch(() => ({ success: false }))
+        if (data.success) {
+          setPosts((prev) =>
+            prev.map((p) =>
+              p.id !== post.id
+                ? p
+                : {
+                    ...p,
+                    tags: isPinned
+                      ? p.tags.filter((t) => t !== PINNED_TAG)
+                      : [...p.tags, PINNED_TAG],
+                  },
+            ),
+          )
+          fetchPinnedNotices()
+          setActionMsg({ type: 'success', text: isPinned ? '공지가 해제되었습니다.' : '공지로 고정되었습니다.' })
+          setTimeout(() => setActionMsg(null), 3000)
+        } else {
+          setActionMsg({ type: 'error', text: '작업에 실패했습니다.' })
+          setTimeout(() => setActionMsg(null), 3000)
+        }
+      } catch {
+        setActionMsg({ type: 'error', text: '네트워크 오류가 발생했습니다.' })
+        setTimeout(() => setActionMsg(null), 3000)
+      }
+    },
+    [fetchPinnedNotices],
+  )
+
+  const handleDelete = useCallback((_post: Post) => {
+    setOpenMenuId(null)
+    // TODO: ROOT-level deletion requires a dedicated admin API (e.g. DELETE /api/v1/admin/notes/[id]).
+    // The existing DELETE /api/v1/notes/[id] only allows the note owner to delete their own note.
+    setActionMsg({ type: 'error', text: '삭제 기능은 아직 준비 중입니다.' })
+    setTimeout(() => setActionMsg(null), 3000)
+  }, [])
+
   const hasMore = posts.length < total
 
   return (
@@ -409,51 +469,28 @@ export default function CommunityPage() {
       {/* Pinned notices */}
       {pinnedNotices.length > 0 && (
         <div className="mb-6">
-          <div className="flex items-center gap-2 mb-3">
-            <Pin size={14} className="text-[#e3b341]" />
-            <span className="text-[#e3b341] text-xs font-semibold uppercase tracking-wide">
-              공지사항
-            </span>
-          </div>
+          <h2 className="text-[#e6edf3] text-sm font-semibold mb-3 flex items-center gap-1.5">
+            <span>📌</span>
+            <span>공지사항</span>
+          </h2>
           <div className="space-y-2">
             {pinnedNotices.map((notice) => (
               <div
                 key={notice.id}
-                onClick={() => {
-                  const asPost: Post = {
-                    id: notice.id,
-                    title: notice.title,
-                    body: notice.body,
-                    tags: [],
-                    authorName: notice.authorName,
-                    createdAt: notice.createdAt,
-                    updatedAt: notice.updatedAt,
-                  }
-                  openPostModal(asPost)
-                }}
-                className="bg-[#161b22] border border-[#e3b341]/40 rounded-xl p-4 cursor-pointer hover:border-[#e3b341]/70 transition-colors"
+                onClick={() => openPostModal(notice)}
+                className="bg-[#161b22] border border-[#7c3aed]/30 rounded-xl px-5 py-3 hover:border-[#7c3aed]/60 transition-colors cursor-pointer"
               >
-                <div className="flex items-start gap-2">
-                  <Pin size={12} className="text-[#e3b341] mt-1 shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[#e6edf3] font-semibold text-sm">{notice.title}</p>
-                    <p className="text-[#8b949e] text-xs leading-relaxed mt-1 line-clamp-2">
-                      {notice.body}
-                    </p>
-                    <div className="flex items-center gap-2 mt-2">
-                      <span className="bg-[#e3b341]/20 text-[#e3b341] text-xs px-2 py-0.5 rounded-full">
-                        by {notice.authorName}
-                      </span>
-                      <span className="text-[#484f58] text-xs">
-                        {formatDistanceToNow(new Date(notice.createdAt), { addSuffix: true })}
-                      </span>
-                    </div>
-                  </div>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-[#7c3aed] text-xs font-medium">{notice.title}</span>
                 </div>
+                <p className="text-[#8b949e] text-xs line-clamp-2">{notice.body}</p>
+                <span className="text-[#484f58] text-xs mt-1 block">
+                  by {notice.authorName} ·{' '}
+                  {formatDistanceToNow(new Date(notice.updatedAt), { addSuffix: true })}
+                </span>
               </div>
             ))}
           </div>
-          <div className="border-t border-[#30363d] mt-5 mb-5" />
         </div>
       )}
 
@@ -471,6 +508,18 @@ export default function CommunityPage() {
         </div>
       )}
 
+      {actionMsg && (
+        <div
+          className={`rounded-xl px-5 py-3 text-sm mb-4 ${
+            actionMsg.type === 'success'
+              ? 'bg-green-500/10 border border-green-500/30 text-green-400'
+              : 'bg-[#da3633]/10 border border-[#da3633]/30 text-[#da3633]'
+          }`}
+        >
+          {actionMsg.text}
+        </div>
+      )}
+
       {loading && (
         <div className="text-center py-16 text-sm text-[#8b949e]">불러오는 중…</div>
       )}
@@ -484,17 +533,65 @@ export default function CommunityPage() {
           const isOpen = openCommentIds.has(post.id)
           const postComments = comments[post.id] ?? []
           const commentCount = postComments.length
+          const isPinned = post.tags.includes(PINNED_TAG)
+          const visibleTags = post.tags.filter((t) => t !== PINNED_TAG)
 
           return (
             <div
               key={post.id}
               onClick={() => openPostModal(post)}
-              className="bg-[#161b22] border border-[#30363d] rounded-xl p-5 hover:border-[#7c3aed]/50 transition-colors cursor-pointer"
+              className={`bg-[#161b22] border rounded-xl p-5 hover:border-[#7c3aed]/50 transition-colors cursor-pointer ${
+                isPinned ? 'border-[#7c3aed]/30' : 'border-[#30363d]'
+              }`}
             >
-              <div className="flex items-center gap-2 mb-2">
-                <span className="bg-[#7c3aed]/20 text-[#7c3aed] text-xs px-2 py-0.5 rounded-full">
-                  by {post.authorName}
-                </span>
+              {/* Card header: author + ROOT menu */}
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  {isPinned && (
+                    <span className="text-[#7c3aed] text-xs" title="공지 고정됨">
+                      📌
+                    </span>
+                  )}
+                  <span className="bg-[#7c3aed]/20 text-[#7c3aed] text-xs px-2 py-0.5 rounded-full">
+                    by {post.authorName}
+                  </span>
+                </div>
+
+                {userRole === 'ROOT' && (
+                  <div className="relative" onClick={(e) => e.stopPropagation()}>
+                    <button
+                      onClick={() => setOpenMenuId(openMenuId === post.id ? null : post.id)}
+                      className="text-[#484f58] hover:text-[#8b949e] p-1 rounded transition-colors"
+                      aria-label="게시글 관리"
+                    >
+                      <MoreVertical size={14} />
+                    </button>
+
+                    {openMenuId === post.id && (
+                      <>
+                        <div
+                          className="fixed inset-0 z-10"
+                          onClick={() => setOpenMenuId(null)}
+                        />
+                        <div className="absolute right-0 top-full mt-1 z-20 py-1 bg-[#1c2128] border border-[#30363d] rounded-lg shadow-xl min-w-[120px]">
+                          <button
+                            onClick={() => handlePinToggle(post)}
+                            className="w-full text-left text-xs px-3 py-1.5 hover:bg-[#30363d] text-[#e6edf3] transition-colors"
+                          >
+                            {isPinned ? '공지 해제' : '공지 고정'}
+                          </button>
+                          <div className="border-t border-[#30363d] my-1" />
+                          <button
+                            onClick={() => handleDelete(post)}
+                            className="w-full text-left text-xs px-3 py-1.5 hover:bg-[#30363d] text-[#da3633] transition-colors"
+                          >
+                            삭제
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
               </div>
 
               <h2 className="text-[#e6edf3] font-semibold text-lg mb-2">{post.title}</h2>
@@ -503,9 +600,9 @@ export default function CommunityPage() {
                 {post.body}
               </p>
 
-              {post.tags.filter((t) => t !== PINNED_TAG).length > 0 && (
+              {visibleTags.length > 0 && (
                 <div className="flex flex-wrap gap-1.5 mb-3">
-                  {post.tags.filter((t) => t !== PINNED_TAG).map((tag) => (
+                  {visibleTags.map((tag) => (
                     <span
                       key={tag}
                       className="inline-flex items-center gap-1 bg-[#21262d] text-[#8b949e] text-xs px-2 py-0.5 rounded-full"

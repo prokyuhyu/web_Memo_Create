@@ -125,3 +125,59 @@ Rules:
 | DB/schema/API changed | No |
 | Verification | File created via Write tool |
 | Remaining concerns | None |
+
+
+---
+
+
+# Changed Files
+
+## New Files
+
+### `src/app/api/v1/admin/notices/route.ts`
+ROOT-only API for pinning/unpinning community posts as notices.
+- `POST` — adds `__PINNED_NOTICE__` tag to the target note (requires ROOT, note must be public)
+- `DELETE` — removes `__PINNED_NOTICE__` tag from the target note (requires ROOT)
+- Both require `{ noteId: string }` in the request body
+- Server enforces ROOT via `requireRole` (reads role from DB, not JWT)
+
+### `src/app/api/v1/notices/pinned/route.ts`
+Public GET endpoint returning all currently pinned public notices.
+- `GET` — returns `{ notices: Post[] }` for notes with `__PINNED_NOTICE__` tag, `isPublic: true`, `deletedAt: null`
+- No auth required (public display)
+
+## Modified Files
+
+### `src/app/(dashboard)/community/page.tsx`
+Major update to add pinned notice UX:
+- Added `PINNED_TAG = '__PINNED_NOTICE__'` constant
+- Added `userRole` state decoded from `accessToken` (UI-only, not for security)
+- Added `getTokenRole()` helper
+- Added `pinnedNotices` state + `fetchPinnedNotices()` fetching `/api/v1/notices/pinned`
+- Added pinned notices section above the feed (purple-bordered cards, clickable → PostModal)
+- Added `openMenuId` state for three-dot menu per card
+- Added `actionMsg` state for brief success/error feedback (auto-clears after 3s)
+- Added `handlePinToggle` — calls POST or DELETE `/api/v1/admin/notices` based on current pin state; updates local post tags + refreshes pinned section
+- Added `handleDelete` — shows "삭제 기능은 아직 준비 중입니다." (TODO: needs ROOT-level delete API, e.g. `DELETE /api/v1/admin/notes/[id]`; existing notes DELETE only allows owner)
+- Each post card now shows `MoreVertical` three-dot menu button if `userRole === 'ROOT'`
+- Menu: "공지 고정" / "공지 해제" + divider + "삭제" (red)
+- Menu closes on backdrop click (fixed inset-0 z-10) or after action
+- Pinned posts show 📌 indicator and purple border in the feed
+- `__PINNED_NOTICE__` filtered from visible tags in both card and PostModal
+- PostModal unchanged except tag filtering
+
+## Sidebar / Layout
+
+### `src/app/(dashboard)/layout.tsx`
+No change needed. The Admin Notices sidebar link was never added to this file; the `/community` card menu is the primary pin/unpin UX. The Admin Notices page (`/admin/notices`) does not exist and is not linked — per task: Option B (no sidebar link, API routes kept).
+
+## API Routes NOT deleted
+- `src/app/api/v1/admin/notices/route.ts` — kept (new)
+- `src/app/api/v1/notices/pinned/route.ts` — kept (new)
+
+## DB / Schema
+- `prisma/schema.prisma` — NOT modified
+- No migrations run
+- No new DB models
+- Pin state uses existing `tags` array field via `__PINNED_NOTICE__` sentinel tag
+

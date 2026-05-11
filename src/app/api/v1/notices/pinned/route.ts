@@ -5,32 +5,25 @@ import { success } from '@/lib/api-response'
 const PINNED_TAG = '__PINNED_NOTICE__'
 
 export async function GET() {
-  const notices = await prisma.note.findMany({
+  const notes = await prisma.note.findMany({
     where: {
+      tags: { has: PINNED_TAG },
       isPublic: true,
       deletedAt: null,
-      tags: { has: PINNED_TAG },
     },
-    select: {
-      id: true,
-      title: true,
-      body: true,
-      createdAt: true,
-      updatedAt: true,
-      user: { select: { name: true, handle: true } },
-    },
-    orderBy: { createdAt: 'desc' },
+    orderBy: { updatedAt: 'desc' },
+    include: { user: { select: { name: true } } },
   })
 
-  const result = notices.map((n) => ({
-    id: n.id,
-    title: n.title,
-    body: n.body,
-    createdAt: n.createdAt,
-    updatedAt: n.updatedAt,
-    authorName: n.user.name,
-    authorHandle: n.user.handle,
+  const notices = notes.map((note) => ({
+    id: note.id,
+    title: note.title,
+    body: note.body,
+    tags: note.tags,
+    authorName: note.user.name,
+    createdAt: note.createdAt.toISOString(),
+    updatedAt: note.updatedAt.toISOString(),
   }))
 
-  return success({ notices: result })
+  return success({ notices })
 }

@@ -1,39 +1,14 @@
 export const dynamic = 'force-dynamic'
 import { NextRequest } from 'next/server'
+import { z } from 'zod'
 import { UserRole } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
-import { success, error } from '@/lib/api-response'
 import { requireRole } from '@/lib/require-role'
+import { success, error } from '@/lib/api-response'
 
 const PINNED_TAG = '__PINNED_NOTICE__'
 
-export async function GET(request: NextRequest) {
-  try {
-    await requireRole(request, UserRole.ROOT)
-  } catch (e) {
-    return e as Response
-  }
-
-  const notices = await prisma.note.findMany({
-    where: {
-      isPublic: true,
-      deletedAt: null,
-      tags: { has: PINNED_TAG },
-    },
-    select: {
-      id: true,
-      title: true,
-      body: true,
-      tags: true,
-      createdAt: true,
-      updatedAt: true,
-      user: { select: { name: true, handle: true } },
-    },
-    orderBy: { createdAt: 'desc' },
-  })
-
-  return success({ notices })
-}
+const bodySchema = z.object({ noteId: z.string() })
 
 export async function POST(request: NextRequest) {
   try {
@@ -42,38 +17,34 @@ export async function POST(request: NextRequest) {
     return e as Response
   }
 
-  let noteId: string
+  let body: unknown
   try {
-    const body = await request.json()
-    noteId = body?.noteId
+    body = await request.json()
   } catch {
-    return error('Invalid request body', 400)
+    return error('Invalid JSON', 400)
   }
 
-  if (!noteId) return error('noteId is required', 400)
+  const result = bodySchema.safeParse(body)
+  if (!result.success) return error('Invalid input', 400)
 
-  const note = await prisma.note.findUnique({ where: { id: noteId } })
-  if (!note) return error('Note not found', 404)
-  if (!note.isPublic) return error('Note must be public to pin', 400)
-  if (note.deletedAt) return error('Cannot pin a deleted note', 400)
+  const { noteId } = result.data
 
-  const newTags = note.tags.includes(PINNED_TAG) ? note.tags : [...note.tags, PINNED_TAG]
-
-  const updated = await prisma.note.update({
-    where: { id: noteId },
-    data: { tags: newTags },
-    select: {
-      id: true,
-      title: true,
-      body: true,
-      tags: true,
-      createdAt: true,
-      updatedAt: true,
-      user: { select: { name: true, handle: true } },
-    },
+  const note = await prisma.note.findFirst({
+    where: { id: noteId, deletedAt: null, isPublic: true },
   })
 
-  return success({ note: updated })
+  if (!note) return error('Note not found', 404)
+
+  if (note.tags.includes(PINNED_TAG)) {
+    return success({ noteId, pinned: true })
+  }
+
+  await prisma.note.update({
+    where: { id: noteId },
+    data: { tags: [...note.tags, PINNED_TAG] },
+  })
+
+  return success({ noteId, pinned: true })
 }
 
 export async function DELETE(request: NextRequest) {
@@ -83,34 +54,32 @@ export async function DELETE(request: NextRequest) {
     return e as Response
   }
 
-  let noteId: string
+  let body: unknown
   try {
-    const body = await request.json()
-    noteId = body?.noteId
+    body = await request.json()
   } catch {
-    return error('Invalid request body', 400)
+    return error('Invalid JSON', 400)
   }
 
-  if (!noteId) return error('noteId is required', 400)
+  const result = bodySchema.safeParse(body)
+  if (!result.success) return error('Invalid input', 400)
 
-  const note = await prisma.note.findUnique({ where: { id: noteId } })
-  if (!note) return error('Note not found', 404)
+  const { noteId } = result.data
 
-  const newTags = note.tags.filter((t) => t !== PINNED_TAG)
-
-  const updated = await prisma.note.update({
-    where: { id: noteId },
-    data: { tags: newTags },
-    select: {
-      id: true,
-      title: true,
-      body: true,
-      tags: true,
-      createdAt: true,
-      updatedAt: true,
-      user: { select: { name: true, handle: true } },
-    },
+  const note = await prisma.note.findFirst({
+    where: { id: noteId, deletedAt: null },
   })
 
-  return success({ note: updated })
+  if (!note) return error('Note not found', 404)
+
+  if (!note.tags.includes(PINNED_TAG)) {
+    return success({ noteId, pinned: false })
+  }
+
+  await prisma.note.update({
+    where: { id: noteId },
+    data: { tags: note.tags.filter((t) => t !== PINNED_TAG) },
+  })
+
+  return success({ noteId, pinned: false })
 }
