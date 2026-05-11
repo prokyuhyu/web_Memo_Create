@@ -16,6 +16,7 @@ import {
   User,
   Shield,
   Terminal,
+  Bell,
 } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import api from '@/lib/api-client'
@@ -115,7 +116,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const navItems: NavItem[] = [
     ...BASE_NAV,
     ...(userRole === 'ROOT'
-      ? [{ label: 'Admin', href: '/admin/users', Icon: Shield }]
+      ? [
+          { label: 'Admin Users', href: '/admin/users', Icon: Shield },
+          { label: 'Admin Notices', href: '/admin/notices', Icon: Bell },
+        ]
       : []),
   ]
 

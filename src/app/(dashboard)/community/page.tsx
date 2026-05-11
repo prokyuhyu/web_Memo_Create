@@ -3,13 +3,24 @@
 import { useState, useEffect, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { formatDistanceToNow } from 'date-fns'
-import { Tag, X } from 'lucide-react'
+import { Tag, X, Pin } from 'lucide-react'
+
+const PINNED_TAG = '__PINNED_NOTICE__'
 
 type Post = {
   id: string
   title: string
   body: string
   tags: string[]
+  authorName: string
+  createdAt: string
+  updatedAt: string
+}
+
+type PinnedNotice = {
+  id: string
+  title: string
+  body: string
   authorName: string
   createdAt: string
   updatedAt: string
@@ -34,6 +45,18 @@ async function fetchPosts(page: number, search: string): Promise<CommunityRespon
   const res = await fetch(`/api/v1/community?${params}`)
   if (!res.ok) throw new Error('Failed to fetch')
   return res.json()
+}
+
+async function fetchPinnedNotices(): Promise<PinnedNotice[]> {
+  try {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null
+    const res = await fetch('/api/v1/notices/pinned', {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    })
+    const data = await res.json()
+    if (data.success) return data.data.notices as PinnedNotice[]
+  } catch {}
+  return []
 }
 
 function getCurrentUserId(): string | null {
@@ -140,9 +163,9 @@ function PostModal({
               {post.body}
             </p>
 
-            {post.tags.length > 0 && (
+            {post.tags.filter((t) => t !== PINNED_TAG).length > 0 && (
               <div className="flex flex-wrap gap-1.5 mt-4">
-                {post.tags.map((tag) => (
+                {post.tags.filter((t) => t !== PINNED_TAG).map((tag) => (
                   <span
                     key={tag}
                     className="inline-flex items-center gap-1 bg-[#21262d] text-[#8b949e] text-xs px-2 py-0.5 rounded-full"
@@ -236,6 +259,8 @@ export default function CommunityPage() {
   const [loadingMore, setLoadingMore] = useState(false)
   const [error, setError] = useState('')
 
+  const [pinnedNotices, setPinnedNotices] = useState<PinnedNotice[]>([])
+
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
   const [openCommentIds, setOpenCommentIds] = useState<Set<string>>(new Set())
   const [comments, setComments] = useState<Record<string, Comment[]>>({})
@@ -245,6 +270,7 @@ export default function CommunityPage() {
 
   useEffect(() => {
     setCurrentUserId(getCurrentUserId())
+    fetchPinnedNotices().then(setPinnedNotices)
   }, [])
 
   useEffect(() => {
@@ -380,6 +406,57 @@ export default function CommunityPage() {
       <h1 className="text-2xl font-bold text-[#e6edf3] mb-2">커뮤니티</h1>
       <p className="text-[#8b949e] text-sm mb-6">공개된 노트들을 모아볼 수 있는 공간입니다</p>
 
+      {/* Pinned notices */}
+      {pinnedNotices.length > 0 && (
+        <div className="mb-6">
+          <div className="flex items-center gap-2 mb-3">
+            <Pin size={14} className="text-[#e3b341]" />
+            <span className="text-[#e3b341] text-xs font-semibold uppercase tracking-wide">
+              공지사항
+            </span>
+          </div>
+          <div className="space-y-2">
+            {pinnedNotices.map((notice) => (
+              <div
+                key={notice.id}
+                onClick={() => {
+                  const asPost: Post = {
+                    id: notice.id,
+                    title: notice.title,
+                    body: notice.body,
+                    tags: [],
+                    authorName: notice.authorName,
+                    createdAt: notice.createdAt,
+                    updatedAt: notice.updatedAt,
+                  }
+                  openPostModal(asPost)
+                }}
+                className="bg-[#161b22] border border-[#e3b341]/40 rounded-xl p-4 cursor-pointer hover:border-[#e3b341]/70 transition-colors"
+              >
+                <div className="flex items-start gap-2">
+                  <Pin size={12} className="text-[#e3b341] mt-1 shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[#e6edf3] font-semibold text-sm">{notice.title}</p>
+                    <p className="text-[#8b949e] text-xs leading-relaxed mt-1 line-clamp-2">
+                      {notice.body}
+                    </p>
+                    <div className="flex items-center gap-2 mt-2">
+                      <span className="bg-[#e3b341]/20 text-[#e3b341] text-xs px-2 py-0.5 rounded-full">
+                        by {notice.authorName}
+                      </span>
+                      <span className="text-[#484f58] text-xs">
+                        {formatDistanceToNow(new Date(notice.createdAt), { addSuffix: true })}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="border-t border-[#30363d] mt-5 mb-5" />
+        </div>
+      )}
+
       <input
         type="text"
         value={search}
@@ -426,9 +503,9 @@ export default function CommunityPage() {
                 {post.body}
               </p>
 
-              {post.tags.length > 0 && (
+              {post.tags.filter((t) => t !== PINNED_TAG).length > 0 && (
                 <div className="flex flex-wrap gap-1.5 mb-3">
-                  {post.tags.map((tag) => (
+                  {post.tags.filter((t) => t !== PINNED_TAG).map((tag) => (
                     <span
                       key={tag}
                       className="inline-flex items-center gap-1 bg-[#21262d] text-[#8b949e] text-xs px-2 py-0.5 rounded-full"
