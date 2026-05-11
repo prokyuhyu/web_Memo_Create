@@ -15,6 +15,7 @@ import {
   Users,
   User,
   Shield,
+  Terminal,
 } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import api from '@/lib/api-client'
@@ -56,10 +57,11 @@ type ConflictItem = {
 type NavItem = { label: string; href: string; Icon: React.ElementType }
 
 const BASE_NAV: NavItem[] = [
-  { label: '커뮤니티', href: '/community', Icon: Users },
+  { label: 'Community', href: '/community', Icon: Users },
   { label: 'Files', href: '/files', Icon: Files },
   { label: 'Calendar', href: '/calendar', Icon: Calendar },
   { label: 'Notes', href: '/notes', Icon: NotebookPen },
+  { label: 'Command', href: '/command', Icon: Terminal },
   { label: 'My Page', href: '/my', Icon: User },
 ]
 
