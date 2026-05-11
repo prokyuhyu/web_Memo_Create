@@ -408,6 +408,14 @@ export default function CommunityPage() {
         })
         const data = await res.json().catch(() => ({ success: false }))
         if (data.success) {
+          if (isPinned) {
+            setPinnedNotices((prev) => prev.filter((n) => n.id !== post.id))
+          } else {
+            setPinnedNotices((prev) => {
+              if (prev.some((n) => n.id === post.id)) return prev
+              return [{ ...post, tags: [...post.tags, PINNED_TAG] }, ...prev]
+            })
+          }
           setPosts((prev) =>
             prev.map((p) =>
               p.id !== post.id
@@ -445,6 +453,12 @@ export default function CommunityPage() {
 
   const hasMore = posts.length < total
 
+  const pinnedIds = new Set(pinnedNotices.map((n) => n.id))
+  const regularPosts = posts.filter((p) => !pinnedIds.has(p.id))
+  const sortedPinnedNotices = [...pinnedNotices].sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+  )
+
   return (
     <div className="max-w-2xl mx-auto">
       {selectedPost && (
@@ -474,7 +488,7 @@ export default function CommunityPage() {
             <span>공지사항</span>
           </h2>
           <div className="space-y-2">
-            {pinnedNotices.map((notice) => (
+            {sortedPinnedNotices.map((notice) => (
               <div
                 key={notice.id}
                 onClick={() => openPostModal(notice)}
@@ -529,7 +543,7 @@ export default function CommunityPage() {
       )}
 
       <div className="space-y-4">
-        {posts.map((post) => {
+        {regularPosts.map((post) => {
           const isOpen = openCommentIds.has(post.id)
           const postComments = comments[post.id] ?? []
           const commentCount = postComments.length

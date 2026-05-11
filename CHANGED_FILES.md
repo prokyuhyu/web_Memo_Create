@@ -12,6 +12,51 @@ Rules:
 
 ---
 
+### 2026-05-12 (session 4)
+
+**Task:** Fix pinned notice ordering/display on community page
+
+---
+
+| Field | Detail |
+|---|---|
+| File | `src/middleware.ts` |
+| Change type | edited |
+| What changed | Added public route exception for `GET /api/v1/notices/pinned` — before this fix, the middleware blocked all unauthenticated requests to that path, causing `fetchPinnedNotices()` (which sends no Authorization header) to silently fail with 401. Pinned notices never appeared on the community page. |
+| Why | `/api/v1/notices/pinned` is display-only public data shown on the community feed, which is already fully public. Requires no auth. |
+| Risk level | low — read-only endpoint, no data mutation |
+| DB/schema changed | no |
+| Migration required | no |
+| Verification performed | `git diff --stat` confirmed; `git diff -- prisma/schema.prisma` empty |
+
+---
+
+| Field | Detail |
+|---|---|
+| File | `src/app/api/v1/notices/pinned/route.ts` |
+| Change type | edited |
+| What changed | Changed `orderBy: { updatedAt: 'desc' }` to `orderBy: { createdAt: 'desc' }` so pinned notices are sorted newest-first by creation date (not by last edit time). |
+| Why | Requirement: pinned notices sorted newest first; createdAt is the canonical ordering for "newest" |
+| Risk level | low |
+| DB/schema changed | no |
+| Migration required | no |
+| Verification performed | `Select-String` confirmed `orderBy: { createdAt: 'desc' }` is present |
+
+---
+
+| Field | Detail |
+|---|---|
+| File | `src/app/(dashboard)/community/page.tsx` |
+| Change type | edited |
+| What changed | (1) `handlePinToggle` now immediately updates `pinnedNotices` local state on success — adds post to pinnedNotices on pin, removes on unpin — before the background `fetchPinnedNotices()` call. This gives instant UI feedback without waiting for network round-trip. (2) Added `pinnedIds` Set, `regularPosts` (posts filtered to exclude pinned IDs), and `sortedPinnedNotices` (pinnedNotices sorted by createdAt desc as local safety fallback) computed in render. (3) Pinned notices section uses `sortedPinnedNotices.map` instead of `pinnedNotices.map`. (4) Regular feed uses `regularPosts.map` instead of `posts.map` — pinned posts no longer appear twice (once in pinned section, once in feed). |
+| Why | Fixes the ordering/display: pinned notices always at top; no duplicate display; immediate state update on pin/unpin |
+| Risk level | low — PostModal, comments, API calls, delete behavior unchanged |
+| DB/schema changed | no |
+| Migration required | no |
+| Verification performed | `Select-String` confirmed `sortedPinnedNotices`, `regularPosts`, `pinnedIds`, `공지 고정`, `공지 해제`, `MoreVertical` all present |
+
+---
+
 ### 2026-05-11 (session 3)
 
 **Task:** Implement v1 pinned notice feature using existing Note model

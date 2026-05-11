@@ -21,6 +21,11 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
+  // Public pinned notices — read-only, displayed on public community feed
+  if (pathname === '/api/v1/notices/pinned' && request.method === 'GET') {
+    return NextResponse.next()
+  }
+
   // Public notes API — let the route handler decide based on isPublic
   if (pathname.startsWith('/api/v1/notes/') && request.method === 'GET') {
     return NextResponse.next()

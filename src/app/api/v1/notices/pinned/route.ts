@@ -11,7 +11,7 @@ export async function GET() {
       isPublic: true,
       deletedAt: null,
     },
-    orderBy: { updatedAt: 'desc' },
+    orderBy: { createdAt: 'desc' },
     include: { user: { select: { name: true } } },
   })
 
