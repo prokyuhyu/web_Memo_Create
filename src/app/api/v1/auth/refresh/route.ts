@@ -34,11 +34,21 @@ export async function POST(request: Request) {
     return error('Invalid token', 401)
   }
 
+  // Fetch current role from DB so a role change is immediately reflected on refresh
+  const user = await prisma.user.findUnique({
+    where: { id: payload.userId },
+    select: { role: true },
+  })
+  if (!user) {
+    await prisma.refreshToken.delete({ where: { token: refreshToken } })
+    return error('Invalid token', 401)
+  }
+
   // Rotation: delete old token before issuing new pair
   await prisma.refreshToken.delete({ where: { token: refreshToken } })
 
   const [newAccessToken, newRefreshToken] = await Promise.all([
-    generateAccessToken(payload.userId),
+    generateAccessToken(payload.userId, user.role),
     generateRefreshToken(payload.userId),
   ])
 

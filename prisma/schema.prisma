@@ -36,6 +36,12 @@ enum TriggerType {
 
 // ─── Auth ─────────────────────────────────────────────────────────────────────
 
+enum UserRole {
+  USER
+  ADMIN
+  ROOT
+}
+
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
@@ -44,6 +50,8 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   uid       Int      @default(0)
+  handle    String?  @unique
+  role      UserRole @default(USER)
 
   refreshTokens RefreshToken[]
   files         File[]
@@ -54,6 +62,7 @@ model User {
   chatRooms     ChatRoomParticipant[]
   sentMessages  ChatMessage[]
   comments      Comment[]
+  auditLogs     AdminAuditLog[] @relation("ActorLogs")
 }
 
 model RefreshToken {
@@ -219,4 +228,21 @@ model Comment {
 
   @@index([noteId])
   @@index([userId])
+}
+
+// ─── Admin ────────────────────────────────────────────────────────────────────
+
+model AdminAuditLog {
+  id        String   @id @default(cuid())
+  actorId   String
+  action    String
+  targetId  String?
+  args      Json?
+  result    String
+  createdAt DateTime @default(now())
+
+  actor User @relation("ActorLogs", fields: [actorId], references: [id])
+
+  @@index([actorId])
+  @@index([createdAt])
 }

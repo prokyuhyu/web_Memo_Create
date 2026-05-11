@@ -10,6 +10,22 @@ const schema = z.object({
   name: z.string().min(1),
 })
 
+function sanitizeHandleBase(email: string): string {
+  return email
+    .split('@')[0]
+    .toLowerCase()
+    .replace(/[^a-z0-9_-]/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
+}
+
+async function resolveHandle(base: string): Promise<string> {
+  if (!(await prisma.user.findFirst({ where: { handle: base } }))) return base
+  let counter = 2
+  while (await prisma.user.findFirst({ where: { handle: `${base}-${counter}` } })) counter++
+  return `${base}-${counter}`
+}
+
 export async function POST(request: Request) {
   let body: unknown
   try {
@@ -31,10 +47,12 @@ export async function POST(request: Request) {
     return error('Invalid input', 400)
   }
 
+  const handle = await resolveHandle(sanitizeHandleBase(email))
   const hashedPassword = await hash(password, 12)
+
   const user = await prisma.user.create({
-    data: { email, password: hashedPassword, name },
-    select: { id: true, email: true, name: true },
+    data: { email, password: hashedPassword, name, handle },
+    select: { id: true, handle: true, email: true, name: true },
   })
 
   return success({ user }, 201)

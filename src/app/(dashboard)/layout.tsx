@@ -3,7 +3,19 @@
 import { useEffect, useState, useCallback, createContext, useContext } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
-import { Files, Calendar, NotebookPen, RefreshCw, LogOut, ChevronLeft, ChevronRight, Menu, Users } from 'lucide-react'
+import {
+  Files,
+  Calendar,
+  NotebookPen,
+  RefreshCw,
+  LogOut,
+  ChevronLeft,
+  ChevronRight,
+  Menu,
+  Users,
+  User,
+  Shield,
+} from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import api from '@/lib/api-client'
 import { ConflictModal } from '@/components/ConflictModal'
@@ -39,14 +51,27 @@ type ConflictItem = {
   serverItem: SyncItem
 }
 
-// ─── Layout ───────────────────────────────────────────────────────────────
+// ─── Nav definition ───────────────────────────────────────────────────────
 
-const NAV = [
+type NavItem = { label: string; href: string; Icon: React.ElementType }
+
+const BASE_NAV: NavItem[] = [
   { label: '커뮤니티', href: '/community', Icon: Users },
   { label: 'Files', href: '/files', Icon: Files },
   { label: 'Calendar', href: '/calendar', Icon: Calendar },
   { label: 'Notes', href: '/notes', Icon: NotebookPen },
+  { label: 'My Page', href: '/my', Icon: User },
 ]
+
+function decodeTokenPayload(token: string): { userId?: string; role?: string } | null {
+  try {
+    return JSON.parse(atob(token.split('.')[1]))
+  } catch {
+    return null
+  }
+}
+
+// ─── Layout ───────────────────────────────────────────────────────────────
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter()
@@ -59,16 +84,38 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [syncError, setSyncError] = useState('')
   const [pendingItems, setPendingItems] = useState<SyncItem[]>([])
   const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [userRole, setUserRole] = useState<string | null>(() => {
+    if (typeof window === 'undefined') return null
+    try {
+      const token = localStorage.getItem('accessToken')
+      if (!token) return null
+      return decodeTokenPayload(token)?.role ?? null
+    } catch {
+      return null
+    }
+  })
 
   // Auth guard + screen size detection
   useEffect(() => {
-    if (!localStorage.getItem('accessToken')) {
+    const token = localStorage.getItem('accessToken')
+    if (!token) {
       router.replace('/login')
+      return
     }
+    const payload = decodeTokenPayload(token)
+    setUserRole(payload?.role ?? null)
+
     const stored = localStorage.getItem('lastSyncedAt')
     if (stored) setLastSynced(new Date(stored))
     if (window.innerWidth < 768) setSidebarOpen(false)
   }, [router])
+
+  const navItems: NavItem[] = [
+    ...BASE_NAV,
+    ...(userRole === 'ROOT'
+      ? [{ label: 'Admin', href: '/admin/users', Icon: Shield }]
+      : []),
+  ]
 
   const addSyncItem = useCallback((item: SyncItem) => {
     setPendingItems((prev) => {
@@ -212,7 +259,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
           {/* Nav links */}
           <nav className={`flex-1 space-y-0.5 ${sidebarOpen ? '' : 'md:flex md:flex-col md:items-center md:space-y-1'}`}>
-            {NAV.map(({ label, href, Icon }) => {
+            {navItems.map(({ label, href, Icon }) => {
               const active = pathname === href || pathname.startsWith(href + '/')
               return (
                 <Link

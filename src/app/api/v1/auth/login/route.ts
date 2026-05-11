@@ -25,7 +25,10 @@ export async function POST(request: Request) {
 
   const { email, password } = result.data
 
-  const user = await prisma.user.findUnique({ where: { email } })
+  const user = await prisma.user.findUnique({
+    where: { email },
+    select: { id: true, handle: true, email: true, name: true, password: true, role: true },
+  })
   // Constant-time path: always compare even when user not found to resist timing attacks
   const passwordHash = user?.password ?? '$2a$12$invalidhashfortimingequalisation'
   const valid = await compare(password, passwordHash)
@@ -35,7 +38,7 @@ export async function POST(request: Request) {
   }
 
   const [accessToken, refreshToken] = await Promise.all([
-    generateAccessToken(user.id),
+    generateAccessToken(user.id, user.role),
     generateRefreshToken(user.id),
   ])
 
@@ -47,11 +50,9 @@ export async function POST(request: Request) {
     },
   })
 
-
-
   return success({
     accessToken,
     refreshToken,
-    user: { id: user.id, email: user.email, name: user.name },
+    user: { id: user.id, handle: user.handle, email: user.email, name: user.name, role: user.role },
   })
 }
